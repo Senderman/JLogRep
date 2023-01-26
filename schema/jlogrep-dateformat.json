@@ -1,0 +1,55 @@
+{
+  "$id": "https://github.com/Senderman/jlogrep/blob/master/schema/jlogrep-dateformat.json",
+  "$schema": "https://github.com/Senderman/jlogrep/blob/master/schema/jlogrep-dateformat.json",
+  "title": "Schema for rules.yml file",
+  "type": "object",
+  "definitions": {
+    "dateFormatRule": {
+      "type": "object",
+      "required": [
+        "file",
+        "format",
+        "regex"
+      ],
+      "properties": {
+        "file": {
+          "description": "File name part. All files that contain the value of this field in their name match",
+          "type": "string"
+        },
+        "format": {
+          "description": "format of the date in file, in java SimpleDateFormat",
+          "type": "string"
+        },
+        "regex": {
+          "description": "regex to extract date substring from the whole long string",
+          "type": "string"
+        },
+        "possibleMissingYear": {
+          "description": "set to true if it's possible for this file to have missing year in log dates",
+          "type": "boolean"
+        },
+        "yearSuffix": {
+          "description": "if possibleMissingYear is true, then this suffix will be added between year and the log string.",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "default",
+    "rules"
+  ],
+  "properties": {
+    "default": {
+      "description": "default rule if no rule from the rules field matches",
+      "$ref": "#/definitions/dateFormatRule"
+    },
+    "rules": {
+      "description": "list of the rules",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/dateFormatRule"
+      }
+    }
+  }
+}

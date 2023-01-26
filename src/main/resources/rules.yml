@@ -1,0 +1,267 @@
+- name: "Player stuck due to slow network"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - "EventLogger.*BUFFERING"
+        - "EXO_PLAYER: state.*BUFFERING"
+  tags:
+    - player
+
+- name: "Player audio stuck due to slow network"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - "EXO_PLAYER: audioTrackUnderrun"
+  tags:
+    - player
+
+- name: "Network timeout"
+  show: 5
+  patterns:
+    - file: network
+      regexes:
+        - "Timeout was reached"
+  tags:
+    - net
+
+- name: "Low Wi-Fi RSSI level"
+  type: EXTRACT
+  show: 5
+  patterns:
+    - file: network
+      regexes:
+        - 'Connection type WIFI.*signal level\(rssi\): (-[789]\d{1,2}|-1[0-2][0-6])'
+  tags:
+    - wifi
+    - hw
+
+- name: "Low Bluetooth RSSI level"
+  type: EXTRACT
+  patterns:
+    - file: logcat
+      regexes:
+        - 'BluetoothDiscovery.*?DEVICE:(.*?),.*NAME:(.*?),.*(RSSI:(?:-[789]\d{1,2}|-1[0-2][0-6]))'
+  tags:
+    - bt
+    - hw
+
+- name: "ExoPlayer Error"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - "E.*ExoPlayerImplInternal:.*Caused by.*exoplayer2"
+  tags:
+    - player
+
+- name: "HTTP code 307 - blocked by ISP"
+  show: 5
+  patterns:
+    - file: network
+      regexes:
+        - " 307"
+  tags:
+    - net
+
+- name: "User rebooted the device"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - "ShutdownThread: Rebooting, reason: userrequested"
+  tags:
+    - android
+    - hw
+    - info
+
+- name: "Failed to run intent due to absence of the application"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - "E LNCHR/RunAppAction: android.content.ActivityNotFoundException: No Activity found to handle Intent"
+  tags:
+    - android
+    - apk
+
+- name: "Disconnected from Wi-Fi"
+  show: 5
+  patterns:
+    - file: network
+      regexes:
+        - "received status: DISCONNECTED.*message: status: DISCONNECTED"
+    - file: dmesg
+      regexes:
+        - 'Link down.*WLC_E_LINK\(16\), reason 2'
+  tags:
+    - wifi
+    - hw
+
+- name: "TKIP-AES is used for Wi-Fi encryption"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - "wpa_supplicant.*GTK=TKIP"
+    - file: dmesg
+      regexes:
+        - "wlan.*sec=.*tkip"
+  tags:
+    - wifi
+    - hw
+
+- name: "Timeout on SDIO bus"
+  show: 5
+  patterns:
+    - file: dmesg
+      regexes:
+        - "sdio: resp_timeout"
+  tags:
+    - wifi
+    - hw
+
+- name: "Wi-Fi module crashed"
+  show: 5
+  patterns:
+    - file: dmesg
+      regexes:
+        - "chip crash eventing, reason"
+  tags:
+    - wifi
+    - hw
+
+- name: "No response from Wi-FI module"
+  show: 5
+  patterns:
+    - file: dmesg
+      regexes:
+        - "dhd_check_hang: Event HANG"
+  tags:
+    - wifi
+    - hw
+
+- name: "Maybe too much wi-fi devices around"
+  show: 5
+  patterns:
+    - file: dmesg
+      regexes:
+        - "return -EBUSY"
+  tags:
+    - wifi
+    - hw
+
+- name: "Not enough memory to install apk"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - 'installd: Device /data has \d+ free; requested \d+; needed \d+'
+        - 'installd: Failed to free up \d+ on /data; final free space \d+'
+  tags:
+    - apk
+
+- name: "Apk doesn't match device's ABI"
+  show: 5
+  patterns:
+    - file: logcat
+      regexes:
+        - "INSTALL_FAILED_NO_MATCHING_ABIS"
+  tags:
+    - apk
+
+- name: "IP"
+  type: EXTRACT
+  show: 10
+  patterns:
+    - file: network
+      regexes:
+        - '(?i)External ip.*?((?:\d{1,3}\.){3}\d{1,3})'
+  tags:
+    - net
+    - info
+  filters:
+    - UNIQUE
+
+- name: "Kernel panics lockups"
+  show: 5
+  patterns:
+    - file: dmesg
+      regexes:
+        - '[Hh]ard LOCKUP'
+        - 'Kernel panic'
+    - file: pstore
+      regexes:
+        - 'Rebooting in \d+ seconds'
+  tags:
+    - hw
+
+- name: "Device was turned on"
+  patterns:
+    - file: dmesg
+      regexes:
+        - "Booting Linux on physical CPU"
+  tags:
+    - hw
+    - info
+
+- name: "Browser history"
+  type: EXTRACT
+  patterns:
+    - file: logcat
+      regexes:
+        - 'content=ContentState\(url=(.*?),.*title=(.*),\s+progress'
+  tags:
+    - browser
+
+- name: "Wifi module entered low power state"
+  patterns:
+    - file: dmesg
+      regexes:
+        - 'RTW.*sleep'
+  tags:
+    - wifi
+    - hw
+
+- name: "App was launched"
+  type: EXTRACT
+  patterns:
+    - file: logcat
+      regexes:
+        - 'ActivityManager: START u0 \{act=android\.intent\.action\.MAIN.*cmp=(.*?)\/'
+  tags:
+    - android
+    - apk
+
+- name: "App navigation events"
+  type: EXTRACT
+  patterns:
+    - file: logcat
+      regexes:
+        - 'ActivityManager: START u0 \{.*cmp=(.*?\/.*?) '
+        - 'KeyEvent: Key down to ([\w_\.]+)@.*keyCode=(.*?),'
+  tags:
+    - android
+    - apk
+
+- name: "Process crashed"
+  type: MULTILINE
+  patterns:
+    - file: logcat
+      regexes:
+        - 'MonitorActivityController.*ERROR: PROCESS CRASHED'
+        - 'MonitorActivityController: stack'
+  tags:
+    - android
+    - apk
+
+- name: "Restart of a crashed process"
+  type: SIMPLE
+  patterns:
+    - file: logcat
+      regexes:
+        - 'ActivityManager: Scheduling restart of crashed'
+  tags:
+    - android
+    - apk

@@ -1,0 +1,57 @@
+plugins {
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("io.micronaut.application") version "3.7.0"
+}
+
+
+group = 'com.senderman'
+version = '3.4.1-beta3'
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+    annotationProcessor("io.micronaut:micronaut-http-validation")
+
+    implementation("io.micronaut:micronaut-jackson-databind")
+    implementation("io.micronaut.views:micronaut-views-thymeleaf")
+    implementation("jakarta.annotation:jakarta.annotation-api")
+    implementation 'org.slf4j:slf4j-nop:2.0.6'
+
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.0'
+    implementation 'org.apache.commons:commons-compress:1.22'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('application.yml') {
+        expand props
+    }
+}
+
+application {
+    mainClass.set("com.senderman.jlogrep.JLogRep")
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion("11")
+    targetCompatibility = JavaVersion.toVersion("11")
+}
+
+
+graalvmNative.toolchainDetection = false
+micronaut {
+    runtime("netty")
+    processing {
+        incremental(true)
+        annotations("com.senderman.*")
+    }
+}

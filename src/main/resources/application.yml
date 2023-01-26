@@ -1,0 +1,25 @@
+micronaut:
+  application:
+    name: JLogRep
+  server:
+    max-request-size: 524288000
+    multipart:
+      max-file-size: 471859200
+  router:
+    static-resources:
+      default:
+        enabled: true
+        mapping: "/**"
+        paths: classpath:static
+
+app:
+  version: '${version}'
+  authors: "Made by @Senderman (backend) and @kaakaa123 (frontend)"
+
+jackson:
+  serializationInclusion: ALWAYS
+
+netty:
+  default:
+    allocator:
+      max-order: 3

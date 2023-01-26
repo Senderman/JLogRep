@@ -1,0 +1,66 @@
+/* JETBRAINS */
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  src: url(JetBrainsMono.ttf);
+}
+
+/* IBM PLEX */
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100;
+  src: url(IBMPlexSans-Thin.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 200;
+  src: url(IBMPlexSans-ExtraLight.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 300;
+  src: url(IBMPlexSans-Light.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(IBMPlexSans-Regular.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  src: url(IBMPlexSans-Medium.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: url(IBMPlexSans-SemiBold.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: url(IBMPlexSans-Bold.ttf);
+}
+
+/* AWESOME FONT */
+@font-face {
+  font-family: 'FontAwesome';
+  font-style: normal;
+  font-weight: 400;
+  src: url(fa-regular-400.ttf);
+}
+@font-face {
+  font-family: 'FontAwesome';
+  font-style: normal;
+  font-weight: 900;
+  src: url(fa-solid-900.ttf);
+}

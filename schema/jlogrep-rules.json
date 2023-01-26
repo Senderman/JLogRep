@@ -1,0 +1,80 @@
+{
+  "$id": "https://github.com/Senderman/jlogrep/blob/master/schema/jlogrep-rules.json",
+  "$schema": "https://github.com/Senderman/jlogrep/blob/master/schema/jlogrep-rules.json",
+  "title": "Schema for rules.yml file",
+  "type": "array",
+  "definitions": {
+    "pattern": {
+      "type": "object",
+      "required": [
+        "file",
+        "regexes"
+      ],
+      "properties": {
+        "file": {
+          "description": "File name part. All files that contain the value of this field in their name match. Or * to match any file",
+          "type": "string"
+        },
+        "regexes": {
+          "description": "Regexes for the given rule and file",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "items": {
+    "type": "object",
+    "required": [
+      "name",
+      "patterns",
+      "tags"
+    ],
+    "properties": {
+      "name": {
+        "description": "Name of the rule",
+        "type": "string"
+      },
+      "type": {
+        "description": "Type of the rule. Default is SIMPLE",
+        "type": "string",
+        "pattern": "SIMPLE|EXTRACT|MULTILINE"
+      },
+      "show": {
+        "description": "How many examples to show. Default is 5",
+        "type": "number"
+      },
+      "showAlways": {
+        "description": "Show always if the rule matched. False if omitted",
+        "type": "boolean"
+      },
+      "patterns": {
+        "description": "Patterns for the rule",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/pattern"
+        }
+      },
+      "tags": {
+        "description": "List of tags for the rule",
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "filters": {
+        "description": "filters for this rule",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "UNIQUE"
+        }
+      }
+    }
+  }
+}
