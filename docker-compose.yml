@@ -1,0 +1,25 @@
+networks:
+  jbug:
+    ipam:
+      driver: default
+      config:
+        - subnet: "180.180.0.0/24"
+
+services:
+  debug:
+    image: nginx:alpine-slim
+    networks:
+      - jbug
+    container_name: debug
+    ports:
+      - "8080:9090"
+    volumes:
+      - ./src/main/resources/static/:/usr/share/nginx/html/
+      - ./debug/:/etc/nginx/conf.d/
+    depends_on:
+      - jlogrep
+  jlogrep:
+    build: .
+    networks:
+      - jbug
+    container_name: jlogrep
