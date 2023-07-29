@@ -1,33 +1,64 @@
+import org.asciidoctor.gradle.base.process.ProcessMode
+
 plugins {
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.micronaut.application") version "3.7.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.micronaut.application") version "4.0.0"
+    id("io.micronaut.aot") version "4.0.0"
+    id("org.asciidoctor.jvm.convert") version "3.3.2"
 }
 
-
 group = 'com.senderman'
-version = '3.4.1-beta3'
+version = '3.10.5'
+
+apply from: "gradle/asciidoc.gradle"
+asciidoctor {
+    inProcess = ProcessMode.JAVA_EXEC
+    forkOptions {
+        jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED")
+    }
+    sourceDir = 'src/docs/asciidoc'
+    outputDir = "build/classes/java/main/META-INF/docs"
+
+    resources {
+        from('src/docs') {
+            include 'css/**'
+            include 'fonts/**'
+        }
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
-
 dependencies {
-    annotationProcessor("io.micronaut:micronaut-http-validation")
+    annotationProcessor('io.micronaut:micronaut-http-validation')
+    annotationProcessor('io.micronaut.serde:micronaut-serde-processor')
+    implementation('io.micronaut.serde:micronaut-serde-jackson')
 
-    implementation("io.micronaut:micronaut-jackson-databind")
-    implementation("io.micronaut.views:micronaut-views-thymeleaf")
-    implementation("jakarta.annotation:jakarta.annotation-api")
-    implementation 'org.slf4j:slf4j-nop:2.0.6'
+    annotationProcessor('io.micronaut.micrometer:micronaut-micrometer-annotation')
+    implementation('io.micronaut:micronaut-management')
+    implementation('io.micronaut.micrometer:micronaut-micrometer-core')
+    implementation('io.micronaut.micrometer:micronaut-micrometer-registry-prometheus')
 
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.0'
-    implementation 'org.apache.commons:commons-compress:1.22'
+    implementation('jakarta.annotation:jakarta.annotation-api')
+
+    implementation('org.yaml:snakeyaml:2.0')
+    implementation('org.kamranzafar:jtar:2.3')
+
+    implementation('ch.qos.logback:logback-classic')
+    compileOnly('com.google.code.findbugs:jsr305')
+
+    annotationProcessor("io.micronaut.openapi:micronaut-openapi")
+    compileOnly("io.swagger.core.v3:swagger-annotations")
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    dependsOn(asciidoctor)
 }
 
+// set version in application.yml during build
 processResources {
     def props = [version: version]
     inputs.properties props
@@ -42,16 +73,27 @@ application {
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion("11")
-    targetCompatibility = JavaVersion.toVersion("11")
+    sourceCompatibility = JavaVersion.toVersion("17")
+    targetCompatibility = JavaVersion.toVersion("17")
 }
-
 
 graalvmNative.toolchainDetection = false
 micronaut {
     runtime("netty")
     processing {
         incremental(true)
-        annotations("com.senderman.*")
+        annotations("com.senderman.jlogrep.*")
+    }
+
+    aot {
+        // Please review carefully the optimizations enabled below
+        // Check https://micronaut-projects.github.io/micronaut-aot/latest/guide/ for more details
+        optimizeServiceLoading = true
+        convertYamlToJava = true
+        precomputeOperations = true
+        cacheEnvironment = true
+        optimizeClassLoading = true
+        deduceEnvironment = false
+        optimizeNetty = true
     }
 }

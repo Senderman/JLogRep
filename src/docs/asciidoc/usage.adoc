@@ -1,0 +1,88 @@
+:toc: left
+:icons: font
+:experimental:
+
+= Usage Guide
+
+== Supported logs archive formats
+
+The program accepts ZIP, TAR.GZ, and plaintext files as logs.
+Also, it supports nested archives, so there is no problem in processing tar.gz, which is in a zip archive, which is in the tar.gz archive... and so on.
+Additional formats can be added if necessary by modifying the source code.
+
+== Basic Scan
+
+1. Upload your logs using the big "Upload logs" button
+2. Scan your logs by clicking the green "BIG BUTTON TO SCAN" or pressing Enter
+
+[#_advanced_scan]
+== Advanced Scan
+
+=== Date/Time and Interval
+
+To scan logs only within a specific time period, you can set up the `date/time` and `interval` fields.
+
+The `interval` defines the number of minutes before and after the date/time that will be analyzed.
+
+For example, if you set the `date/time` to `12.05.2023 09:30` and the `interval` to `5`, the program will scan all logs from `12.05.2023 09:25` to `12.05.2023 09:35`.
+
+NOTE: All logs that don't have a date/time, will also be included. Use `DATED` filter to avoid this behaviour.
+
+==== Year
+
+Some logs may not contain a year in their date prefix. In this case, you need to provide it manually.
+
+To do so, check the `optional` checkbox and input the year in which your logs were created. The current year will be used if not supplied
+
+[#_filters]
+=== Filters
+
+Filters are used to exclude certain results. Currently supported filters are:
+
+[cols="1,1"]
+|===
+| Filter | Description
+
+|UNIQUE
+|Include only the first match in the result. This filter ignores dates, so if you have log lines with the same content but different dates, only one log line will be included. Note that the output line is **not guaranteed** to be the first one in the log archive based on date!
+
+|DATED
+|By default, all log lines without a date will be included in the result. To exclude them, enable this filter
+|===
+
+=== Tags
+
+Tags are used to select which types of problems the program will scan for.
+All tags are enabled by default.
+
+Enabling only the necessary tags improves the program's performance.
+
+IMPORTANT: problems with `showAlways=true` will be shown regardless of the enabled tags.
+
+To identify which tag is responsible for which problems, refer to the rules.yml file you are using.
+
+TIP: check link:/docs/writing-your-own-dateformat.html[writing you own rules] to understand syntax.
+
+=== YAML configuration files
+
+You can supply your own rules.yml and dateformat.yml files to change the program's behavior.
+
+If not supplied, the program will use its internal configuration files.
+
+Refer to link:/docs/writing-your-own-rules.html[Writing your own rules] and link:/docs/writing-your-own-dateformat.html[Writing your own dateformat.yml]
+
+NOTE: To upload `dateformat.yml`, check the `optional` checkbox.
+
+== Custom RegEx scan
+
+You can also provide your own regular expression to scan it in the whole log archive, or only inside specific files.
+
+To do that, you need to enter your regular expression inside the upper-left `RegEX` field, and word that files to be scanned should contain in the upper-right `filename part` field, and then press kbd:[Enter] or `Search` button.
+The result (if it contains at least 1 log line) will be shown on the top of the current problem list.
+
+Also, all parameters, except for `tags` and `rules.yml` will be applied.
+
+IMPORTANT: Currently, there's no way to perform `MULTILINE` scan using this feature
+
+TIP: You can use capturing groups in your regular expression to perform string extraction.
+See link:/docs/writing-your-own-rules.html#_using_groups_in_the_simple_rule[Writing your own rules#using groups in the simple rule]

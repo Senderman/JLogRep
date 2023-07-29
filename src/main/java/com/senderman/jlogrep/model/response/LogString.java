@@ -1,26 +1,28 @@
 package com.senderman.jlogrep.model.response;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.senderman.jlogrep.util.ComparableArrayDeque;
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.serde.annotation.Serdeable;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.util.Deque;
+import java.util.Objects;
 
+@Serdeable
+@Schema(description = "Info about matched lines")
 public class LogString implements Comparable<LogString> {
 
-    private final static DateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
-
     private final transient String file;
-    private final String line;
+    private final Deque<String> lines;
     @Nullable
-    private final Date date;
+    private final Instant date;
 
     // Date will be saved as new Date(0) if null is given
-    public LogString(String file, String line, @Nullable Date date) {
+    public LogString(String file, ComparableArrayDeque<String> lines, @Nullable Instant date) {
         this.file = file;
-        this.line = line;
+        this.lines = lines;
         this.date = date;
     }
 
@@ -29,33 +31,44 @@ public class LogString implements Comparable<LogString> {
         return file;
     }
 
-    public String getLine() {
-        return line;
+    @Schema(description = "Lines. May contain several lines due to MULTILINE rules / capturing groups")
+    public Deque<String> getLines() {
+        return lines;
     }
 
     @Nullable
     @JsonIgnore
-    public Date getRawDate() {
+    public Instant getRawDate() {
         return date;
     }
 
-    @JsonGetter
-    public String getDate() {
-        return date != null ? df.format(date) : "";
+    @Nullable
+    @Schema(description = "Date in unix time. UTC+0. Milliseconds. Null if unknown")
+    public Long getDate() {
+        return date == null ? null : date.toEpochMilli();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(lines);
     }
 
     @Override
     public int compareTo(LogString logString) {
-        Date o1Date = this.getRawDate();
-        Date o2Date = logString.getRawDate();
-        if (o1Date == null || o2Date == null)
-            return 1;
+        Instant o1Date = this.getRawDate();
+        Instant o2Date = logString.getRawDate();
 
-        if (o1Date.before(o2Date))
-            return -1;
-        else
-            return 1;
+        // move all non-dated objects to the top
+        if (o1Date == null) {
+            if (o2Date == null) {
+                return 0; // Both objects are null, consider them equal
+            } else {
+                return -1; // Only the current object is null, consider it less than the provided object
+            }
+        } else if (o2Date == null) {
+            return 1; // Only the provided object is null, consider the current object greater
+        }
 
-        // we don't compare o1Date.after because if they are equal, and we return 0, TreeSet won't add it
+        return o1Date.compareTo(o2Date);
     }
 }

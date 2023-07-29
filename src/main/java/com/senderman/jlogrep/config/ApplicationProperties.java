@@ -1,32 +1,21 @@
 package com.senderman.jlogrep.config;
 
-import io.micronaut.context.annotation.Value;
-import jakarta.inject.Singleton;
+import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.serde.annotation.Serdeable;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Singleton
-public class ApplicationProperties {
-    private final String name;
-    private final String version;
-    private final String authors;
+@ConfigurationProperties("micronaut.application")
+@Serdeable
+@Schema(description = "Info about application")
+public interface ApplicationProperties {
 
-    public ApplicationProperties(
-            @Value("${micronaut.application.name}") String name,
-            @Value("${app.version}") String version,
-            @Value("${app.authors}") String authors) {
-        this.name = name;
-        this.version = version;
-        this.authors = authors;
-    }
+    @Schema(description = "Name of the program")
+    String getName();
 
-    public String getName() {
-        return name;
-    }
+    @Schema(description = "Version of the program")
+    String getVersion();
 
-    public String getVersion() {
-        return version;
-    }
+    @Schema(description = "Authors of the program")
+    String getAuthors();
 
-    public String getAuthors() {
-        return authors;
-    }
 }

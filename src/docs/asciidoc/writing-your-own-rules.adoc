@@ -1,0 +1,198 @@
+:toc: left
+:icons: font
+
+= Writing your own rules
+
+rules.yml is used to tell the program what regexes, in which files should be processed, and how.
+To write your own rules, you should create a .yml file and fill it with your rules.
+
+The file itself is a definition of Rule objects, separated with `---`
+
+== The Rule object
+
+Each Rule object consists of multiple properties.
+
+[cols="1,1,1,1"]
+|===
+|Required|Name|Description|Default value
+
+|YES|name|Name of the problem|
+|NO|show|How many of the last examples to show in the output by default|5
+|NO|type|Could be SIMPLE or MULTILINE. See <<_rule_types>>.|SIMPLE
+
+|NO
+|showAlways
+|If true, and the given rule is matched at least once, the rule will be always shown
+|false
+
+|YES|patterns|List of Pattern objects|
+
+|YES
+|tag
+|Tag for this rule. Tags are useful to grep only for rules marked with given tags
+|
+
+|NO|filters|Filters for the type of the rule. See <<_rule_filters>>|
+|===
+
+== The Pattern object
+
+[cols="1,1,1"]
+|===
+|Required|Name|Description
+
+|YES
+|name
+|File name part for this Pattern, will match against any file whose name contains it. Set to `*` to match any file
+
+|YES
+|show
+|List of regexes in Java dialect. The way this list is handled depends on the `type` of the parent Rule of this Pattern
+|===
+
+== Example
+
+[source,yaml]
+----
+name: "Timeouts"
+show: 2
+showAlways: true
+patterns:
+- file: logcat
+  regexes:
+    - "EventLogger.*SocketTimeoutException"
+- file: service_netcheck
+  regexes:
+    - "ERROR.*amazonaws.com.*Timeout"
+tag: net
+---
+name: "Unable to resolve resources"
+show: 2
+patterns:
+- file: service_netcheck
+  regexes:
+    - "ERROR.*google.com.*resolve"
+    - "ERROR.*amazonaws.com.*resolve"
+tag: hw
+---
+name: "Bad bluetooth signal"
+patterns:
+- file: logcat
+  regexes:
+    - 'BluetoothDiscovery.*?DEVICE:(.*?),.*NAME:(.*?),.*(RSSI:(?:-[789]\d{1,2}|-1[0-2][0-6]))'
+tag: bt
+filters:
+- UNIQUE
+----
+
+[#_rule_types]
+== Rule types
+
+Depending on the `type` property of the Rule object, rule will be handled differently.
+
+=== SIMPLE
+
+This is the default Rule type. For every regex, it checks if the log line matches the regex, and prints it. Note that as soon as the first regex is matched, the log line won't be checked against the remaining regexes.
+So, given the rule
+
+[source,yaml]
+----
+name: "Unable to resolve resources"
+show: 2
+patterns:
+- file: service_netcheck
+  regexes:
+    - "ERROR.*google.com.*resolve"
+    - "ERROR.*amazonaws.com.*resolve"
+tag: hw
+----
+
+Every log line in every file, which contains `service_netcheck` in the name, will be checked against the first regex, and if not matched, against the second one.
+
+[#_using_groups_in_the_simple_rule]
+==== Using groups in the SIMPLE rule
+
+If there's at least one capturing group in the regex, the regex is handled differently, because it doesn't just show the matched log line in the output.
+Instead, it checks for the regex (wrapped with `.*` of course) if it is matched against the log line, and if so, it extracts all capturing groups from the log line, and prints it in the following format:
+`date: group1, group2, ..., groupN`
+
+So, given the rule
+
+[source,yaml]
+----
+name: "User wants or needs something tasty"
+type: EXTRACT
+patterns:
+- file: logcat
+  regexes:
+    - 'want (.*) and (.*) for (.*)'
+    - 'need (.*) and (.*)'
+tag: bt
+----
+
+And a log line `12.03.2022 15:46.12.123 I want an apple and an orange for breakfast`, the program will:
+
+1. Check if the log line matches against `.*want (.*) and (.*) for (.*).*` regex
+2. Extract groups from the log line
+3. Print `12.03.2022 15:46.12.123: an apple, an orange, breakfast`
+
+Note that it won't check the log line against the `.*need (.*) and (.*).*` regex, since the first regex is matched.
+
+=== MULTILINE
+
+This type of rule is used when you have to grep multiple log line as one problem.
+The `regexes` array in this rule **should** only contain 2 regexes: one for the first line, and second for the last
+line.
+The date of the example will be the date of the first line.
+
+So, given the rule
+
+[source,yaml]
+----
+name: "Shopping list"
+show: 3
+type: MULTILINE
+patterns:
+- file: service_smartapp
+  regexes:
+    - 'To buy'
+    - 'Shopping list end'
+tag: staros
+----
+
+and the following log:
+
+[source,text]
+----
+12.03.2022 15:46 Wash the dishes
+12.03.2022 15:47 Clean up
+12.03.2022 15:48 To buy:
+ - apples
+ - eggs
+ - canned beef
+Shopping list end
+12.03.2022 15:50 Go to bed
+----
+
+The program will:
+
+1. Skip the log file to the `12.03.2022 15:48 To buy` line (by checking every line against `To buy` regex)
+2. Save all lines until `Shopping list end` line (**exclusive**).
+3. Print the first line and the saved lines from pt.2
+
+NOTE: since all these lines will be shown as **one** example, the `show` parameter in the rule will determine how many multiline results will be shown, **not the number of lines in the example itself!**
+
+IMPORTANT: if you want to write a single MULTILINE rule for multiple files.
+Make sure that there are exactly two regexes for each file in the rule.
+
+[#_rule_filters]
+== Rule filters
+
+Rule filters are applied for every matched line.
+
+You can add filter names to the `filters` list of the rule.
+If some filters are passed through the request parameters (via frontend), they will be applied to all rules, so it's possible to e.g. make all rules show only unique values.
+
+See link:/docs/usage.html#_filters[Usage#filters]
+
+NOTE: filters only change what lines will go to the output, but not the counter of the matched lines!

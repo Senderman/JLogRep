@@ -36,11 +36,11 @@
     }
   },
   "required": [
-    "default",
+    "defaultRule",
     "rules"
   ],
   "properties": {
-    "default": {
+    "defaultRule": {
       "description": "default rule if no rule from the rules field matches",
       "$ref": "#/definitions/dateFormatRule"
     },

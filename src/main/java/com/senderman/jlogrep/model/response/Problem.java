@@ -1,49 +1,57 @@
 package com.senderman.jlogrep.model.response;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.senderman.jlogrep.model.rules.RuleFilter;
+import com.senderman.jlogrep.model.rule.RuleFilter;
+import io.micronaut.serde.annotation.Serdeable;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+@Serdeable
+@Schema(description = "Problem, found in logs")
 public class Problem {
 
     private final String name; // name of the problem
-    private final transient int show;
+    private final int show; // how much examples to show (for frontend)
     private final boolean shownAlways;
-    private final Set<String> tags;
+    private final String tag;
     private final EnumSet<RuleFilter> filters;
     private final transient Predicate<LogString> filter;
-    private final TreeSet<LogString> examples; // list of example strings that matched
-    private int count; // count of regex matched (independent from examples.size())
+    private final transient Deque<LogString> examples; // list of example strings that matched
+    private int count; // count of regex matched (independent from examples.size()), because examples could be filtered
 
-    public Problem(String name, int show, boolean shownAlways, Set<String> tags, EnumSet<RuleFilter> filters) {
+    public Problem(String name, int show, boolean shownAlways, String tag, EnumSet<RuleFilter> filters) {
         this.name = name;
         this.show = show;
         this.shownAlways = shownAlways;
-        this.examples = new TreeSet<>();
+        this.examples = new ArrayDeque<>();
         this.count = 0;
-        this.tags = tags;
+        this.tag = tag;
         this.filters = filters;
         this.filter = filters.stream()
                 .map(Supplier::get)
                 .reduce(x -> true, Predicate::and); // join all filters with "AND"
     }
 
-    @JsonGetter
+    @Schema(description = "Name of the problem. Defined in rules")
     public String getName() {
         return name;
     }
 
-    @JsonGetter
+    @Schema(description = "How many examples to show by default. For frontend")
+    public int getShow() {
+        return show;
+    }
+
+    @Schema(description = "True if this problem shows up regardless of tags selected")
     public boolean isShownAlways() {
         return shownAlways;
     }
 
-    @JsonGetter
+    @Schema(description = "How many lines matches this rule")
     public int getCount() {
         return count;
     }
@@ -52,22 +60,28 @@ public class Problem {
         this.count++;
     }
 
-    @JsonGetter
-    public Set<String> getTags() {
-        return tags;
+    @Schema(description = "Tag, associated with this problem. Defined in rules")
+    public String getTag() {
+        return tag;
     }
 
     // group log lines by file name, mapping grouped values to FileResult
-    @JsonGetter
-    public Collection<FileResult> getExamples() {
-        Map<String, List<LogString>> map = examples
+    @Schema(description = "Examples, grouped by file")
+    public List<FileResult> getExamples() {
+        return examples
                 .stream()
-                .skip(Math.max(examples.size() - show, 0))
-                .collect(Collectors.groupingBy(LogString::getFile));
+                .sorted()
+                .collect(Collectors.groupingBy(LogString::getFile))
+                .entrySet()
+                .parallelStream()
+                .map(e -> new FileResult(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(r -> r.contents.get(0)))
+                .toList();
+    }
 
-        Collection<FileResult> fileResults = new TreeSet<>();
-        map.forEach((k, v) -> fileResults.add(new FileResult(k, v)));
-        return fileResults;
+    @Schema(description = "Size of 'examples' array")
+    public int getExamplesSize() {
+        return examples.size();
     }
 
     @JsonIgnore
@@ -88,12 +102,14 @@ public class Problem {
             examples.add(logString);
     }
 
-    @JsonGetter
+    @Schema(description = "Filters applied to this rule")
     public EnumSet<RuleFilter> getFilters() {
         return filters;
     }
 
-    public static class FileResult implements Comparable<FileResult> {
+    @Serdeable
+    @Schema(description = "Matched lines in single file")
+    public static class FileResult {
         private final String file;
         private final List<LogString> contents;
 
@@ -102,19 +118,14 @@ public class Problem {
             this.contents = contents;
         }
 
+        @Schema(description = "File name")
         public String getFile() {
             return file;
         }
 
-        @JsonGetter
+        @Schema(description = "Matched lines")
         public List<LogString> getContents() {
             return contents;
-        }
-
-        // compare by first log string date
-        @Override
-        public int compareTo(FileResult fileResult) {
-            return this.contents.get(0).compareTo(fileResult.contents.get(0));
         }
     }
 }

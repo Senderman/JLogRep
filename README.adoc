@@ -1,0 +1,37 @@
+:toc:
+= JLogRep - Automated log parser
+
+The name comes from Java Logs /re/p - search logs by regular expressions and print
+
+== Requirements
+
+- JDK 17+
+
+== Build
+
+Windows: `gradlew shadowJar`
+
+Linux/Mac: `./gradlew shadowJar`
+
+Jar file with all dependencies will be generated in `build/libs`
+
+== Launch
+
+Run: `java -jar jlogrep.jar`.
+
+Open `http://localhost:8080` in your favourite web browser.
+Upload your logs and go!
+
+For advanced usage, see link:src/docs/asciidoc/usage.adoc#_advanced_scan[Usage#Advanced scan]
+
+== Frontend debug
+
+Run: `docker compose up`
+
+Open `http://localhost:8080` in your favourite web browser.
+Now changes in web resources are applied instantly.
+
+== Documentation
+
+Documentation is avaliable on application's main page.
+Documentation sources are available link:src/docs/asciidoc[here].

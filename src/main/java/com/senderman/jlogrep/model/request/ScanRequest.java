@@ -1,26 +1,32 @@
 package com.senderman.jlogrep.model.request;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.convert.format.Format;
 
+import java.util.Collections;
 import java.util.Set;
 
 public class ScanRequest extends AbsAnalysisRequest {
 
-    @Nullable
-    private Set<String> tags;
+    private final Set<String> tags;
 
-    @Nullable
-    public Set<String> getTags() {
-        return tags;
-    }
+    public ScanRequest(
+            @Nullable @Format(DATE_FORMAT) String date,
+            @Nullable Integer year,
+            @Nullable Integer interval,
+            @Nullable String filters,
+            @Nullable String tags
+    ) {
+        super(date, year, interval, filters);
 
-    @JsonSetter
-    public void setTags(@Nullable String tags) {
         if (tags == null)
-            this.tags = null;
+            this.tags = Collections.emptySet();
         else
             this.tags = Set.of(tags.split(","));
+    }
+
+    public Set<String> getTags() {
+        return tags;
     }
 
 }

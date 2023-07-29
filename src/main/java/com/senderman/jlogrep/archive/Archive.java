@@ -1,56 +1,77 @@
 package com.senderman.jlogrep.archive;
 
-import com.senderman.jlogrep.util.LogSource;
+import com.senderman.jlogrep.archive.tar.TarInputStreamAdapter;
+import com.senderman.jlogrep.archive.zip.ZipInputStreamAdapter;
 import io.micronaut.core.annotation.Nullable;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.kamranzafar.jtar.TarInputStream;
 
-import java.util.Stack;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipInputStream;
 
 public abstract class Archive {
 
-    private final Stack<Archive> stack;
-    private final ArchiveInputStream archiveInputStream;
+    private static final Map<String, BiFunction<String, InputStream, Archive>> supportedExtensions = Map.of(
+            "zip",
+            (name, in) -> new Archive(name, new ZipInputStreamAdapter(new ZipInputStream(in))) {
+            },
 
-    public Archive(ArchiveInputStream inputStream) {
-        this.stack = new Stack<>();
+            "tar.gz",
+            (name, in) -> new Archive(name, new TarInputStreamAdapter(new TarInputStream(uncheckedGzipInputStream(in)))) {
+            }
+    );
+
+    private static final Pattern extensionRegex = Pattern.compile(".*(" + String.join("|", supportedExtensions.keySet()) + ")");
+    private final ArchiveInputStream<?> archiveInputStream;
+    private final String path;
+
+    /**
+     * Constructs Archive object with given path and archive input stream.
+     * It's expected that inputStream contains the correct decompressor for this archive
+     *
+     * @param path        full path to this archive
+     * @param inputStream input stream, wrapped with appropriate decompressor
+     */
+    private Archive(String path, ArchiveInputStream<?> inputStream) {
+        this.path = path;
         this.archiveInputStream = inputStream;
-        stack.push(this);
     }
 
+    /**
+     * Return Archive creator based on file extension, or null if no suitable creator found
+     *
+     * @param fileName name of the file
+     * @return InputStream -> Archive function, or null if no suitable creator found
+     */
     @Nullable
-    public LogSource getNextEntry() {
-        // if there's nothing to take from this node
-        if (stack.isEmpty())
-            return null;
-        var archive = stack.peek();
-        var in = archive.getArchiveInputStream();
-        ArchiveEntry entry;
-        try {
-            entry = in.getNextEntry();
-        } catch (Exception e) { // impossible to unpack current archive
-            stack.pop();
-            return getNextEntry();
-        }
-        // if no entries left in the current archive
-        if (entry == null) {
-            stack.pop();
-            return getNextEntry();
-        }
-        if (entry.isDirectory())
-            return getNextEntry();
-        var name = entry.getName();
-        var clazz = ArchiveDetector.detectArchiveType(name);
-        // if the current entry is not an archive
-        if (clazz == null) {
-            return new LogSource(in, name);
-        }
-        var nextIn = ArchiveDetector.createArchive(in, clazz);
-        stack.push(nextIn);
-        return getNextEntry();
+    public static BiFunction<String, InputStream, Archive> getArchiveCreator(String fileName) {
+        return supportedExtensions.get(extensionRegex.matcher(fileName).replaceFirst("$1"));
     }
 
-    protected ArchiveInputStream getArchiveInputStream() {
+    private static GZIPInputStream uncheckedGzipInputStream(InputStream in) {
+        try {
+            return new GZIPInputStream(in);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public ArchiveInputStream<?> getArchiveInputStream() {
         return archiveInputStream;
     }
+
+    /**
+     * Returns full path to this archive
+     *
+     * @return full path to this archive
+     */
+    public String getPath() {
+        return path;
+    }
+
 }

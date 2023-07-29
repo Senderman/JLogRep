@@ -1,25 +1,78 @@
 micronaut:
+
   application:
     name: JLogRep
+    version: '${version}' # replaced with project version from build.gradle during processResources stage
+    authors: "Made by @Senderman (backend) and @kaakaa123 (frontend)"
+
   server:
     max-request-size: 524288000
     multipart:
       max-file-size: 471859200
+
   router:
     static-resources:
       default:
         enabled: true
-        mapping: "/**"
         paths: classpath:static
+        mapping: /**
+      docs:
+        paths: classpath:META-INF/docs
+        mapping: /docs/**
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /swagger/**
+      rapidoc:
+        paths: classpath:META-INF/swagger/views/rapidoc
+        mapping: /rapidoc/**
 
-app:
-  version: '${version}'
-  authors: "Made by @Senderman (backend) and @kaakaa123 (frontend)"
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+        step: PT1M
+        descriptions: false
 
-jackson:
-  serializationInclusion: ALWAYS
+  serde:
+    serialization:
+      inclusion: ALWAYS # do not change, or the frontend will be broken
+
+  openapi:
+    views:
+      spec: >
+        rapidoc.enabled=true,
+        rapidoc.theme=light,
+        rapidoc.bg-color=#232323,
+        rapidoc.text-color=#9453A6,
+        rapidoc.header-color=#663973,
+        rapidoc.primary-color=#5B83B3,
+        rapidoc.sort-endpoints-by=method,
+        rapidoc.use-path-in-nav-bar=true,
+        rapidoc.show-method-in-nav-bar=as-colored-text,
+        rapidoc.nav-bg-color=#2f2f2f,
+        rapidoc.nav-text-color=#7fa646,
+        rapidoc.allow-server-selection=false,
+        rapidoc.allow-authentication=false,
+        rapidoc.allow-spec-file-download=true,
+        rapidoc.default-schema-tab=schema,
+        rapidoc.schema-style=table,
+        rapidoc.show-components=true,
+        rapidoc.show-curl-before-try=true,
+        rapidoc.schema-description-expanded=true
+
+endpoints:
+  metrics:
+    enabled: false # DO NOT CHANGE OR THE APP WON'T START!
+  prometheus:
+    enabled: false # prometheus metrics are already served at /metrics
+    sensitive: false
 
 netty:
   default:
     allocator:
       max-order: 3
+
+logger:
+  levels:
+    io.micronaut.http.server.netty.RoutingInBoundHandler: DEBUG

@@ -1,224 +1,317 @@
 package com.senderman.jlogrep.controller;
 
 import com.senderman.jlogrep.archive.Archive;
-import com.senderman.jlogrep.archive.ArchiveDetector;
-import com.senderman.jlogrep.config.ApplicationProperties;
 import com.senderman.jlogrep.config.ConfigMapper;
 import com.senderman.jlogrep.container.ArchiveLogsContainer;
 import com.senderman.jlogrep.container.LogsContainer;
 import com.senderman.jlogrep.container.PlainTextLogsContainer;
-import com.senderman.jlogrep.exception.BadRequestException;
-import com.senderman.jlogrep.exception.EmptyBugreportName;
-import com.senderman.jlogrep.exception.InvalidConfigFormatException;
+import com.senderman.jlogrep.exception.EmptyBugreportNameException;
+import com.senderman.jlogrep.exception.NoSuchTaskException;
+import com.senderman.jlogrep.model.internal.ScanOptions;
+import com.senderman.jlogrep.model.request.AbsAnalysisRequest;
 import com.senderman.jlogrep.model.request.RegexRequest;
 import com.senderman.jlogrep.model.request.ScanRequest;
+import com.senderman.jlogrep.model.response.FileInfo;
 import com.senderman.jlogrep.model.response.Message;
 import com.senderman.jlogrep.model.response.Problem;
-import com.senderman.jlogrep.model.rules.FileRule;
-import com.senderman.jlogrep.model.rules.RuleFilter;
-import com.senderman.jlogrep.model.rules.RuleType;
-import com.senderman.jlogrep.model.rules.YamlRule;
+import com.senderman.jlogrep.model.rule.GrepRule;
+import com.senderman.jlogrep.model.rule.RuleFilter;
+import com.senderman.jlogrep.model.rule.RuleType;
+import com.senderman.jlogrep.scanner.FileListScanner;
 import com.senderman.jlogrep.scanner.LogScanner;
-import com.senderman.jlogrep.util.DefaultScanOptionsSupplier;
+import com.senderman.jlogrep.task.TaskManager;
+import com.senderman.jlogrep.task.TaskRepresentation;
+import com.senderman.jlogrep.util.ConfigConverter;
+import com.senderman.jlogrep.util.Uploads;
 import io.micronaut.core.annotation.Nullable;
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.HttpStatus;
+import io.micronaut.core.convert.format.Format;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.multipart.CompletedFileUpload;
-import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.inject.Provider;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Controller
 public class MainController {
 
-    private final LogScanner scanner;
-    private final DefaultScanOptionsSupplier scanOptionsSupplier;
+    private static final int REGEX_DEFAULT_SHOW_VALUE = 5;
+
+    private final LogScanner logScanner;
+    private final FileListScanner fileListScanner;
+    private final TaskManager<Collection<Problem>> problemTaskManager;
+    private final TaskManager<Collection<FileInfo>> fileInfoTaskManager;
+    private final Provider<ScanOptions> defaultScanOptions;
     private final ConfigMapper configMapper;
-    private final List<YamlRule> internalRules;
-    private final ApplicationProperties app;
 
     public MainController(
-            LogScanner scanner,
-            DefaultScanOptionsSupplier scanOptionsSupplier,
-            ConfigMapper configMapper,
-            List<YamlRule> internalRules,
-            ApplicationProperties app
+            LogScanner logScanner,
+            FileListScanner fileListScanner,
+            TaskManager<Collection<Problem>> problemTaskManager,
+            TaskManager<Collection<FileInfo>> fileInfoTaskManager,
+            Provider<ScanOptions> defaultScanOptions,
+            ConfigMapper configMapper
     ) {
-        this.scanner = scanner;
-        this.scanOptionsSupplier = scanOptionsSupplier;
+        this.logScanner = logScanner;
+        this.fileListScanner = fileListScanner;
+        this.problemTaskManager = problemTaskManager;
+        this.fileInfoTaskManager = fileInfoTaskManager;
+        this.defaultScanOptions = defaultScanOptions;
         this.configMapper = configMapper;
-        this.internalRules = internalRules;
-        this.app = app;
     }
 
     @Post("/scan")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Collection<Problem> scan(
+    @Operation(
+            summary = "Scan logs by rules",
+            description = "Send logs to scan them with internal or provided rules. Poll the result by taskId on /result-problems"
+    )
+    @ApiResponse(responseCode = "200")
+    @ApiResponse(
+            responseCode = "400",
+            description = "Empty bugreport name, or invalid config (rules/dateformat) format",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    @ApiResponse(
+            responseCode = "500",
+            description = "Other error",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    public TaskRepresentation<Collection<Problem>> scan(
+            @Parameter(description = "Logs to scan")
             CompletedFileUpload bugreport,
-            @Nullable CompletedFileUpload rules,
-            @Nullable CompletedFileUpload dateFormat,
-            ScanRequest r
+
+            @Parameter(description = "Rules to scan logs with. Internal if not supplied")
+            @Nullable
+            CompletedFileUpload rules,
+
+            @Parameter(description = "Date format to use. Internal if not supplied")
+            @Nullable
+            CompletedFileUpload dateFormat,
+
+            @Parameter(
+                    description = "Date of the problem. Scan all logs if not supplied. Format: " + AbsAnalysisRequest.DATE_FORMAT
+            )
+            @Format(AbsAnalysisRequest.DATE_FORMAT)
+            @Header @Nullable
+            String when,
+
+            @Parameter(description = "This year will be used for logs without year. Current if not supplied")
+            @Header @Nullable
+            Integer year,
+
+            @Parameter(
+                    description = "Defines upper and lower bounds from the date of the problem to scan, in minutes",
+                    schema = @Schema(defaultValue = "10", implementation = Integer.class)
+            )
+            @Header @Nullable
+            Integer interval,
+
+            @Parameter(description = "Filters to apply, separated by comma")
+            @Header @Nullable
+            String filters,
+
+            @Parameter(description = "Which types of problems to scan for, separated by comma")
+            @Header
+            @Nullable String tags
     ) throws IOException {
 
-        var bugreportName = bugreport.getFilename();
-        if (bugreportName == null)
-            throw new EmptyBugreportName();
+        var r = new ScanRequest(when, year, interval, filters, tags);
 
-        var bugreportIn = copyToMemoryAndClose(bugreport.getInputStream());
-        var archiveType = ArchiveDetector.detectArchiveType(bugreportName);
-        LogsContainer logsContainerToScan;
-
-        if (archiveType == null) {
-            logsContainerToScan = new PlainTextLogsContainer(bugreportIn, bugreportName);
-        } else {
-            Archive bugreportArchive = ArchiveDetector.createArchive(bugreportIn, archiveType);
-            logsContainerToScan = new ArchiveLogsContainer(bugreportArchive);
-        }
-
-        var scanOptions = scanOptionsSupplier.get();
+        LogsContainer logsContainerToScan = createLogsContainer(bugreport);
+        var scanOptions = defaultScanOptions.get();
 
         if (rules != null)
-            try (var rulesStream = rules.getInputStream()) {
-                scanOptions.setYamlRules(configMapper.mapRules(rulesStream));
-            }
+            scanOptions.setConfigRules(configMapper.mapRules(rules.getInputStream()));
 
         if (dateFormat != null)
-            try (var dateFormatSteam = dateFormat.getInputStream()) {
-                scanOptions.setDateFormat(configMapper.mapLogDateFormat(dateFormatSteam));
-            }
+            scanOptions.setDateFormat(ConfigConverter.toLogDateFormat(configMapper.mapLogDateFormat(dateFormat.getInputStream())));
 
-        if (r.getDate() != null)
-            scanOptions.setProblemDate(r.getDate());
+        scanOptions
+                .setProblemDate(r.getDate())
+                .setYear(r.getYear())
+                .setInterval(r.getInterval())
+                .setTags(r.getTags())
+                .setFilters(r.getFilters());
 
-        if (r.getTags() != null)
-            scanOptions.setTags(r.getTags());
-        if (r.getFilters() != null)
-            scanOptions.setFilters(r.getFilters());
-
-        scanOptions.setYear(r.getYear());
-        scanOptions.setInterval(r.getInterval());
-        scanOptions.setShow(r.getShow());
-
-        return scanner.scan(logsContainerToScan, scanOptions);
+        return problemTaskManager.addTask(() -> logScanner.scan(logsContainerToScan, scanOptions));
     }
 
     @Post("/regex")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Collection<Problem> regex(
+    @Operation(
+            summary = "Scan logs by regex",
+            description = "Send logs to scan them with provided regex. Poll the result by taskId on /result-problems"
+    )
+    @ApiResponse(responseCode = "200")
+    @ApiResponse(
+            responseCode = "400",
+            description = "Empty bugreport name, or invalid config (dateformat) format",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    @ApiResponse(
+            responseCode = "500",
+            description = "Other error",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    public TaskRepresentation<Collection<Problem>> regex(
+            @Parameter(description = "Logs to scan")
             CompletedFileUpload bugreport,
+
+            @Parameter(description = "Date format to use. Internal if not supplied")
             @Nullable CompletedFileUpload dateFormat,
-            RegexRequest r) throws IOException {
 
-        var bugreportName = bugreport.getFilename();
-        if (bugreportName == null)
-            throw new EmptyBugreportName();
+            @Parameter(
+                    description = "Date of the problem. Scan all logs if not supplied. Format: " + AbsAnalysisRequest.DATE_FORMAT
+            )
+            @Format(AbsAnalysisRequest.DATE_FORMAT)
+            @Header @Nullable
+            String when,
 
-        var bugreportIn = copyToMemoryAndClose(bugreport.getInputStream());
-        var archiveType = ArchiveDetector.detectArchiveType(bugreportName);
-        LogsContainer logsContainerToScan;
+            @Parameter(description = "This year will be used for logs without year. Current if not supplied")
+            @Header @Nullable
+            Integer year,
 
-        if (archiveType == null) {
-            logsContainerToScan = new PlainTextLogsContainer(bugreportIn, bugreportName);
-        } else {
-            Archive bugreportArchive = ArchiveDetector.createArchive(bugreportIn, archiveType);
-            logsContainerToScan = new ArchiveLogsContainer(bugreportArchive);
-        }
+            @Parameter(
+                    description = "Defines upper and lower bounds from the date of the problem to scan, in minutes",
+                    schema = @Schema(defaultValue = "10", implementation = Integer.class)
+            )
+            @Header @Nullable
+            Integer interval,
 
-        var grepRule = new FileRule.GrepRule();
-        grepRule.setName(r.getRegex());
-        grepRule.setRegexes(List.of(r.getRegex()));
-        grepRule.setType(RuleType.SIMPLE);
-        grepRule.setShow(Integer.MAX_VALUE);
-        grepRule.setShowAlways(true);
-        grepRule.setTags(Set.of("regex"));
-        grepRule.setFilters(EnumSet.noneOf(RuleFilter.class));
-        var fileRule = new FileRule(r.getFile(), List.of(grepRule));
+            @Parameter(description = "Filters to apply, separated by comma")
+            @Header @Nullable
+            String filters,
 
-        var scanOptions = scanOptionsSupplier.get();
-        scanOptions.setFileRules(List.of(fileRule));
+            @Parameter(description = "Regex to scan logs with")
+            @Header
+            String regex,
 
-        if (r.getDate() != null)
-            scanOptions.setProblemDate(r.getDate());
+            @Parameter(
+                    description = "Word that files to be scanned should contain. All files if not supplied",
+                    schema = @Schema(defaultValue = "*", implementation = String.class)
+            )
+            @Header @Nullable
+            String file
+    ) throws IOException {
 
-        if (r.getFilters() != null)
-            scanOptions.setFilters(EnumSet.copyOf(r.getFilters()));
+        var r = new RegexRequest(when, year, interval, filters, regex, file);
+
+        LogsContainer logsContainerToScan = createLogsContainer(bugreport);
+        var grepRule = new GrepRule(
+                r.getFile(),
+                String.format("regex: %s, file: %s", r.getRegex(), r.getFile()),
+                RuleType.SIMPLE,
+                REGEX_DEFAULT_SHOW_VALUE,
+                false,
+                List.of(Pattern.compile(r.getRegex())),
+                "regex",
+                EnumSet.noneOf(RuleFilter.class)
+        );
+
+        var scanOptions = defaultScanOptions.get();
 
         if (dateFormat != null)
-            try (var dateFormatSteam = dateFormat.getInputStream()) {
-                scanOptions.setDateFormat(configMapper.mapLogDateFormat(dateFormatSteam));
-            }
+            scanOptions.setDateFormat(ConfigConverter.toLogDateFormat(configMapper.mapLogDateFormat(dateFormat.getInputStream())));
 
-        scanOptions.setYear(r.getYear());
+        scanOptions
+                .setRules(List.of(grepRule))
+                .setProblemDate(r.getDate())
+                .setYear(r.getYear())
+                .setInterval(r.getInterval())
+                .setTags(Set.of("regex"))
+                .setFilters(EnumSet.copyOf(r.getFilters()));
 
-        return scanner.scan(logsContainerToScan, scanOptions);
+        return problemTaskManager.addTask(() -> logScanner.scan(logsContainerToScan, scanOptions));
     }
 
-    @Post("/rules")
+    @Post("/files")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Collection<String> rules(@Nullable CompletedFileUpload rules)
-            throws IOException, InvalidConfigFormatException {
-
-        if (rules == null)
-            return listTags(internalRules);
-
-        List<YamlRule> uploadedRules;
-        try (var in = rules.getInputStream()) {
-            uploadedRules = configMapper.mapRules(in);
-        }
-
-        return listTags(uploadedRules);
+    @ApiResponse(responseCode = "200")
+    @ApiResponse(
+            responseCode = "500",
+            description = "Other error",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    @Operation(
+            summary = "Get info about files in archive",
+            description = "Info about file names and archive (recursive unpacking). If unable to unpack the supplied file, get info about this file"
+    )
+    public TaskRepresentation<Collection<FileInfo>> files(
+            @Parameter(description = "File to scan")
+            CompletedFileUpload bugreport
+    ) throws IOException {
+        LogsContainer logsContainerToScan = createLogsContainer(bugreport);
+        return fileInfoTaskManager.addTask(() -> fileListScanner.scan(logsContainerToScan));
     }
 
-    @Get("/filters")
-    public RuleFilter[] filters() {
-        return RuleFilter.values();
+    @Get("/result-problems")
+    @Operation(
+            summary = "Get result of /scan or /regex request",
+            description = "Use this method to pool result of /scan or /regex request"
+    )
+    @ApiResponse(responseCode = "200")
+    @ApiResponse(
+            responseCode = "404",
+            description = "No task with given id found",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    @ApiResponse(
+            responseCode = "500",
+            description = "Other error",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    public TaskRepresentation<Collection<Problem>> resultProblems(
+            @Parameter(description = "Id of the task")
+            @QueryValue("taskId") String taskId
+    ) throws NoSuchTaskException {
+        return problemTaskManager.getTaskAndDeleteIfReady(taskId);
     }
 
-    @Get()
-    @View("index")
-    public Map<String, String> main() {
-        return Map.of(
-                "title", app.getName(),
-                "authors", app.getAuthors(),
-                "_version", app.getVersion()
-        );
+    @Get("/result-files")
+    @Operation(
+            summary = "Get result of /files request",
+            description = "Use this method to pool result of /files request"
+    )
+    @ApiResponse(responseCode = "200")
+    @ApiResponse(
+            responseCode = "404",
+            description = "No task with given id found",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    @ApiResponse(
+            responseCode = "500",
+            description = "Other error",
+            content = @Content(schema = @Schema(implementation = Message.class))
+    )
+    public TaskRepresentation<Collection<FileInfo>> resultFiles(
+            @Parameter(description = "Id of the task")
+            @QueryValue("taskId") String taskId
+    ) throws NoSuchTaskException {
+        return fileInfoTaskManager.getTaskAndDeleteIfReady(taskId);
     }
 
-    @Get("/version")
-    public Message version() {
-        return new Message(HttpStatus.OK.getCode(), app.getVersion());
-    }
+    private LogsContainer createLogsContainer(CompletedFileUpload upload) throws IOException, EmptyBugreportNameException {
+        var filename = upload.getFilename();
+        if (filename == null)
+            throw new EmptyBugreportNameException();
 
-    @Error
-    public HttpResponse<Message> badRequest(BadRequestException e) {
-        return HttpResponse.badRequest(new Message(HttpStatus.BAD_REQUEST.getCode(), e.getMessage()));
-    }
+        var archiveCreator = Archive.getArchiveCreator(filename);
 
-    @Error
-    public HttpResponse<Message> serverError(Throwable t) {
-        return HttpResponse.serverError(new Message(HttpStatus.INTERNAL_SERVER_ERROR.getCode(), t.getMessage()));
-    }
-
-    private Collection<String> listTags(List<YamlRule> rules) {
-        return rules
-                .stream()
-                .flatMap(r -> r.getTags().stream())
-                .distinct()
-                .sorted()
-                .collect(Collectors.toUnmodifiableList());
-    }
-
-    private InputStream copyToMemoryAndClose(InputStream in) throws IOException {
-        try (in) {
-            return new ByteArrayInputStream(in.readAllBytes());
-        }
+        if (archiveCreator == null) // process as text if null
+            return new PlainTextLogsContainer(Uploads.copy(upload), filename, upload.getSize());
+        else
+            return new ArchiveLogsContainer(archiveCreator.apply(filename, Uploads.copy(upload)));
     }
 
 }

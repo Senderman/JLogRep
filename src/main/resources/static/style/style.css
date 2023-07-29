@@ -1,5 +1,4 @@
 /* core style  */
-
 :root {
 	--violet: #9453A6;
 	--violet-darker: #663973;
@@ -12,6 +11,7 @@
 	--yellow: #f2cb07;
 	--fox:  #d97d5b;
 	--foxy: #d96523;
+	--red: #E65561;
 	--black: #1a1a1a;
 	--dark: #232323;
 	--dark-grey: #2f2f2f;
@@ -24,152 +24,135 @@
 	--mono: 'JetBrains Mono', Courier New, Courier, monospace;
 	--icon: 'FontAwesome';
 }
-
+* { box-sizing: border-box; }
 ::-webkit-scrollbar { background-color: var(--black); }
 ::-webkit-scrollbar-thumb { background-color: var(--grey); }
-
+::-webkit-scrollbar-corner { background-color: var(--black); }
 ::selection {
   background: var(--foxy);
   color: var(--white);
 }
-
 html {
 	background-color: var(--dark);
+	color-scheme: dark;
 }
 body {
 	font-family: var(--sans);
 	margin: 0;
 	padding: 0;
-	display: grid;
-	grid-template-columns: 20em 4px 1fr;
 	color: var(--light);
 	height: 100vh;
+}
+.grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+}
+a { position: fixed; }
+.workspace {
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: 20em 4px 1fr;
+	grid-template-rows: 100%;
+	height: 100%;
 	overflow-y: hidden;
+	background-color: var(--dark);
+	z-index: 1;
+	position: relative;
+	box-shadow: 0 0 0 1px var(--grey);
 }
 
 /* left panel  */
 
-#left-panel {
+.left {
 	display: grid;
-	grid-template-rows: 7em 1fr;
+	grid-template-rows: 2.4rem 1fr;
+	grid-template-columns: 100%;
 	overflow-x: hidden;
 	position: relative;
-	height: 100vh;
+	height: 100%;
+  --optional: none;
 }
-#input-forms {
+.input-forms {
 	scrollbar-width: none;
 	overflow-y: scroll;
-	padding: 0 8px;
+	padding: 8px;
 	padding-bottom: 5em;
-}
-#input-forms::-webkit-scrollbar {
-	display: none;
-}
-#input-forms > div {
-	border: 1px solid var(--grey);
-	margin: 9px 0;
-	border-radius: 12px;
-	background-color: var(--dark);
-}
-
-#input-forms.oneonly > div > details > summary {
-	display: none;
-}
-#input-forms.oneonly {
-	padding: 0;
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
+	gap: 8px;
 }
-#input-forms.oneonly > div {
-	border: none;
-	margin: 0;
-	border-bottom: 1px solid var(--grey);
-	border-radius: 0;
+.input-forms::-webkit-scrollbar {
+	display: none;
 }
-#input-forms.oneonly > div > .button {
-	margin: 8px;
+.input-form {
+	border: 1px solid var(--grey);
+	border-radius: 12px;
+	background-color: var(--dark);
+	position: relative;
+	transition: right 200ms ease-in,
+		opacity 200ms ease-in;
 }
-#input-forms.oneonly > div.add {
-	margin: 0;
-	border-top: 1px solid var(--grey) !important;
-	border-radius: 0;
+.input-form .button::after {
+	content: '';
+	font-family: var(--icon);
 }
-#input-forms.oneonly > div.add > .button {
-	border-radius: 0;
-	box-shadow: none;
-	margin: 0;
-}
-#input-forms.oneonly > div.add > .button:first-child {
-  border-right: 1px solid var(--grey) !important;
-}
-#input-forms.oneonly > div.add > .button:hover {
-	background-color: var(--light-grey);
-	color: var(--dark);
-}
-
-#input-forms > div > details > summary {
+.input-form > details > summary {
 	font-weight: 700;
 	height: 2.5em;
 	display: flex;
-	flex-direction: row;
-	justify-content: center;
 	border-bottom: 1px solid var(--grey);
 	font-family: var(--mono);
 	border-radius: 12px 12px 0 0;
 	cursor: pointer;
 }
-#input-forms > div > details > summary > span {
+.input-form > details > summary > span:first-child::before {
+	content: "\f0da";
+	font-weight: 900;
+	font-family: var(--icon);
+	color: var(--color);
+}
+.input-form > details[open] > summary > span:first-child::before {
+	content: "\f0d7";
+}
+.input-form > details > summary > span {
 	width: 100%;
 	display: inline-flex;
-	flex-direction: column;
-	justify-content: center;
+	flex-direction: row;
+	justify-content: space-evenly;
 	align-items: center;
+	--color: var(--green2);
+	color: var(--light);
 }
-#input-forms > div > details > summary > span:first-child {
+.input-form > details > summary > span:first-child {
 	border-radius: 12px 0 0 0;
+	border-right: 1px solid var(--grey);
+	
 }
-#input-forms > div > details > summary > span:last-child {
+.input-form > details > summary > span:last-child {
 	border-left: 1px solid var(--grey);
 	border-radius: 0 12px 0 0;
+	font-family: var(--icon);
+	width: 5em;
 }
-#input-forms > div > details > summary > span:hover {
+.input-form > details > summary > span:last-child:hover {
+	background-color: var(--red);
+}
+.input-form > details > summary > span:hover {
 	background-color: var(--light-grey);
-	color: var(--dark);
+	--color: var(--dark);
+	color: var(--color);
 }
-#input-forms > div > details > summary::marker {
+.input-form > details > summary::marker {
 	content: none;
 }
-
-.add {
-	display: flex;
-	justify-content: stretch;
-	border: none !important;
-}
-.add > .button:first-child  {
-	margin-right: 8px;
-}
-.add > .button {
-	width: 100%;
-	margin: 0;
-}
-
-#credits {
-	color: var(--grey);
-	font-style: italic;
-	padding: 0.3em 0.5em;
-	z-index: -1;
-	position: absolute;
-	bottom: 0;
-	font-size: 0.9em;
-}
-
 .textinput {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
-	padding: 0em  0.6em;
+	padding: 0em .6em;
+	padding-right: 5px;
 }
 .textinput:hover {
 	background-color: var(--black);
@@ -180,18 +163,20 @@ body {
 }
 .textinput > input[type=text]  {
 	width: 100%;
-	height: 2.5em;
+	height: 2em;
 	max-width: 12em;
 	padding-left: 0.5em;
-	background: none;
+	background-color: var(--dark-grey);
 	color: var(--light);
 	font-weight: bold;
 	border: none;
-	border-bottom: 2px solid var(--violet);
 	outline: none !important;
+	border-radius: 4px;
+	margin: 2px 0;
 }
 .textinput > input[type=text]:hover {
-	border-bottom: 2px solid var(--foxy);
+	background-color: var(--grey);
+	color: var(--white);
 }
 
 
@@ -201,6 +186,7 @@ body {
 	justify-content: space-between;
 	width: 100%;
 	height: 4em;
+	margin-bottom: 2px;
 }
 .dateinput > label {
 	padding-left: 0.6em;
@@ -227,8 +213,8 @@ input[type=file] {
 }
 
 .uploadcontrol {
-	margin-bottom: 4px;
-	margin-top: 3px;
+	margin-bottom: 5px;
+	margin-top: 2px;
 	cursor: pointer;
 	height: 3em;
 	position: relative;
@@ -246,9 +232,12 @@ input[type=file] {
 	background-color: var(--dark-grey);
 	white-space: nowrap;
 	cursor: pointer;
+	padding: 0 1em;
 }
 .upload > span {
-	margin-left: 1em;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .upload:hover {
 	background-color: var(--black);
@@ -259,7 +248,7 @@ input[type=file] {
 	position: absolute;
 	top: 8px;
 	right: 8px;
-	font-size: 1.5em;
+	font-size: 1.2em;
 	height: calc(3rem - 16px);
 	width: calc(3rem - 16px);
 	border-radius: 4px;
@@ -267,69 +256,44 @@ input[type=file] {
 	justify-content: center;
 	align-items: center;
 	font-family: var(--icon);
+	font-weight: 900;
 	text-rendering: auto;
 	--color: var(--black);
 	color: var(--color);
-}
-.close::after {
-	content: "\f00d";
-	font-weight: 900;
 	-webkit-text-stroke: 2px var(--color);
 }
 .close:hover {
 	background-color: var(--black);
 	--color: var(--grey);
 }
-
-.rulestags {
-	margin-top: 0.4em;
-}
-
-.rulestags > .textinput {
+.checkboxes {
 	justify-content: start;
 	flex-wrap: wrap;
-	padding-left: 3px;
+	padding: 2px 5px 3px;
+	display: flex;
+	gap: 5px;
 }
-
-.rulestags > .textinput > label {
+.checkboxes > label {
 	margin: 0;
-}
-
-.filterbox {
-	background: none;
-	color: var(--light-grey);
-	box-shadow: 0 0 0 1px var(--light-grey) inset;
-	font-weight: 500;
-	font-size: 0.9em;
-	border-radius: 4px;
-	padding: 0.15em 0.8em;
-	margin: 3px;
-	cursor: pointer;
-	--tag: 'none';
-}
-.filterbox::after {
-	content: var(--tag);
-}
-input[type="checkbox"]:checked+.filterbox {
-	background-color: var(--light-grey);
-	color: var(--dark);
 }
 
 .tagbox {
 	background-color: var(--blue);
-	font-weight: 500;
+	font-weight: 600;
 	color: var(--dark);
 	font-size: 0.9em;
 	border-radius: 4px;
-	padding: 0.15em 0.8em;
-	margin: 3px;
+	padding: 0 0.8em;
+	height: 1.6em;
 	cursor: pointer;
 	--tag: 'none';
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 .tagbox:hover {
   color: var(--white);
 }
-
 .tagbox::after {
 content: var(--tag);
 }
@@ -339,34 +303,38 @@ input[type="checkbox"]:checked+.tagbox {
 	color: var(--blue);
 	box-shadow: 0 0 0 1px var(--blue) inset;
 }
-
+.filterbox {
+	background: none;
+	color: var(--light-grey);
+	box-shadow: 0 0 0 1px var(--light-grey) inset;
+}
+input[type="checkbox"]:checked+.filterbox {
+	background-color: var(--light-grey);
+	color: var(--dark);
+	box-shadow: 0 0 0 1px var(--light-grey) inset;
+}
 .eyebox {
 	background-color: var(--violet);
-	font-weight: bold;
-	color: var(--dark);
-	border-radius: 4px;
-	padding: 0.24rem 0.24rem;
-	margin: 3px;
-	cursor: pointer;
+  --tag: '\f06e';
 	font-family: var(--icon);
 	text-rendering: auto;
-	font-size: 0.9em;
+	font-weight: bold;
+	padding: 0;
+	width: 2em;
 }
-.eyebox::after {
-	content: "\f06e";
-}
-
 input[type="checkbox"]:checked+.eyebox {
 	background: none;
 	color: var(--violet);
 	box-shadow: 0 0 0 1px var(--violet) inset;
 }
-
 input[type="checkbox"]:checked+.eyebox::after {
-	content: "\f070";
+	--tag: "\f070";
 }
 
-.uploadlogslabel {
+.uploadlogs {
+	border-bottom: 1px solid var(--grey);
+}
+.uploadlogs > label {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -374,32 +342,186 @@ input[type="checkbox"]:checked+.eyebox::after {
 	height: 3em;
 	white-space: nowrap;
 	justify-content: center;
-	margin: 0;
-	padding: 0;
+	padding: 0 1em;
 	background-color: var(--violet-darker);
-	font-size: 1.1em;
-	font-weight: 600;
+	font-weight: 900;
+  border-radius: 4px;
+  margin: 4px;
 }
-
-.uploadlogslabel:hover {
+.uploadlogs span {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+.uploadlogs > .checkbox > .expand {
+	width: 100%;
+}
+.uploadlogs > label:hover {
 	background-color: var(--violet);
 	color: var(--white);
 }
-
-#logname {
+.uploadlogs:hover > label.checkbox {
+	display: block;
+}
+.uploadlogs > label.checkbox {
+	display: none;
+	position: absolute;
+	padding: 0;
+	background: none;
+	top: 0.5em;
+	left: 0.5em;
+	width: 2em;
+	height: 2em;
+	background-color: var(--dark);
+	border-radius: 4px;
+}
+.menu > .checkbox {
+	display: block;
+	background-color: var(--dark-grey);
+	border-radius: 6px;
+	width: fit-content;
+	padding: 0;
+	margin: 0;
+}
+.openclose, .expand, .erase, .options {
+	height: 100%;
+	width: 2rem;
+	margin: 0;
+	background-color: var(--dark-grey);
+	border-radius: 6px;
+	--symbol: '\f07b';
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0 0.5em;
+}
+.expand {
+	--symbol: '\f2d0';
+}
+.openclose::after, .expand::after {
+	content: var(--symbol);
+	font-family: var(--icon);
+	font-size: 1.2em;
+	font-weight: 100;
+}
+input[type="checkbox"]:checked+.openclose {
+	--symbol: '\f07c';
+	background-color: var(--light-grey);
+	color: var(--dark);
+}
+input[type="checkbox"]:checked+.expand {
+	--symbol: '\f2d2';
+}
+.erase {
+	font-family: var(--icon);
+	font-size: 1.2em;
+	cursor: pointer;
+}
+.erase:hover {
+	background-color: var(--red);
+	color: var(--dark-grey);
+}
+.scan {
+  padding: 0 .5em;
+	cursor: pointer;
+}
+.scan:hover {
+	background-color: var(--light-grey);
+	color: var(--dark-grey);
+}
+.scan::before {
+	content: '\f002';
+	font-family: var(--icon);
+	margin-right: .4em;
+}
+.options {
+	width: max-content;
+	font-size: 1em;
+	font-weight: 900;
+	color: var(--light-grey);
+  padding: 0 .5em;
+	cursor: pointer;
+	--symbol: '\f0c8';
+}
+.options::before {
+	content: var(--symbol);
+	font-family: var(--icon);
+	margin-right: .4em;
+}
+input[type="checkbox"]:checked+.options {
+	--symbol: '\f14a';
+}
+.options:hover {
+	background-color: var(--light-grey);
+	color: var(--dark-grey);
+}
+.optional {
+  display: var(--optional);
+}
+.logname {
 	font-size: 0.8em;
 	font-family: var(--mono);
+  border-top: 1px solid var(--grey);
+  border-bottom: 1px solid var(--grey);
 }
-#logname > p {
+.logname > p {
 	padding-left: 1em;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+  line-height: 1.4em;
+  margin: .6em 0;
+}
+.files > summary {
+  color: var(--light);
+  padding: .2em .6em;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+.files:hover > summary, .files[open] > summary {
+  background-color: var(--yellow);
+  color: var(--black);
+}
+.files > summary > span::after {
+  animation: loadt 1s linear infinite;
+  content: '.';
+}
+.files {
+	margin: 4px;
+	border-radius: 4px;
+	border: 2px solid var(--dark);
+}
+.files[open], .files:hover {
+	border: 2px solid var(--yellow);
+}
+.fileslist > details[open] {
+	border: 1px solid var(--yellow);
+	margin: 4px;
+	border-radius: 4px;
+}
+.fileslist > :is(details[open],details:hover) > summary {
+	background-color: var(--yellow);
+	color: var(--dark);
+}
+.fileslist {
+  height: 6em;
+  overflow: hidden scroll;
+  resize: vertical;
+}
+.fileslist div, .fileslist details > summary {
+	padding: .1em .5em;
+}
+.fileslist > *, .fileslist div {
+	border-top: 1px solid var(--grey);
+	word-wrap: break-word;
 }
 
-.button.active  {
+.workspace:hover .button.active  {
 	background-color: var(--green2);
 	color: var(--dark);
 	box-shadow: none;
 }
-.button.active:hover {
+.workspace:hover .button.active:hover {
 	background-color: var(--green4);
 	color: var(--dark);
 	box-shadow: none;
@@ -408,10 +530,11 @@ input[type="checkbox"]:checked+.eyebox::after {
 	color: var(--grey);
 	box-shadow: 0 0 0 1px var(--grey) inset;
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	cursor: pointer;
 	justify-content: center;
 	align-items: center;
+	gap: 0.4em;
 	white-space: nowrap;
 	overflow: hidden;
 	height: 3em;
@@ -419,6 +542,8 @@ input[type="checkbox"]:checked+.eyebox::after {
 	font-size: 1.2em;
 	border-radius: 6px;
 	margin: 6px;
+	user-select: none;
+	-webkit-user-select: none;
 }
 .button:hover {
 	color: var(--light-grey);
@@ -426,7 +551,7 @@ input[type="checkbox"]:checked+.eyebox::after {
 }
 
 .message {
-	z-index: 1;
+	z-index: 7;
 	position: fixed;
 	background-color: var(--dark);
 	border: 1px solid var(--grey);
@@ -435,6 +560,7 @@ input[type="checkbox"]:checked+.eyebox::after {
 
 #error {
 	width: fit-content;
+	max-width: 75%;
 	font-family: var(--mono);
 	font-weight: 500;
 	padding: 1em 2em;
@@ -444,22 +570,18 @@ input[type="checkbox"]:checked+.eyebox::after {
 	left: 0;
 	right: 0;
 	margin: 0 auto;
+	transition: all;
+	display: none;
+	word-break: break-word;
 }
-.topmes {
-	animation: top 3s ease-in;
-}
-@keyframes top {
-	0% { top: -9em; opacity: 0;}
-	10% { top: 2em; opacity: 1;}
-	90% { top: 2em; opacity: 1;}
-	100% { top: -9em; opacity: 0;}
-}
-
 .load {
 	position: absolute;
 	display: none;
-	top: calc(50% - 4em);
-	left: calc(50% - 4em);
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	margin: auto;
 	height: 8em;
 	width: 8em;
 	flex-direction: column;
@@ -476,7 +598,7 @@ input[type="checkbox"]:checked+.eyebox::after {
 	0% {background-position: 200% 200%;
 	background-image: linear-gradient(90deg, 
 	var(--violet) 50%,
-	var(--blue) 0);}
+	var(--blue) 0);}	
 	25% {background-position: 0% 200%;
 	background-image: linear-gradient(180deg, 
 	var(--blue) 50%,
@@ -506,7 +628,7 @@ input[type="checkbox"]:checked+.eyebox::after {
 	border-radius: 12px;
 	height: 4em;
 	width: 4em;
-	animation: loadr 2s cubic-bezier( 0.62, 0.21, 0.38, 0.85 ) infinite;
+	animation: loadr 2s linear infinite;
 	margin-top: 0.6em;
 }
 .load > .text::after {
@@ -516,35 +638,45 @@ input[type="checkbox"]:checked+.eyebox::after {
 
 /* vertical separator */
 
-#vrt {
-	background-color: var(--dark);
+.line {
+	background-color: var(--black);
 	border-left: 1px solid var(--grey);
 	cursor: col-resize;
 }
-
-#vrt:hover {
-	background-color: var(--violet);
+.line:hover {
+	background-color: var(--violet-darker);
+	border-left: 1px solid var(--violet);
+}
+.line.drag {
+	background-color: var(--violet-darker);
 	border-left: 1px solid var(--violet);
 }
 
-/* workspace */
-#workspaces {
+/* outputs */
+.right {
 	position: relative;
-	bottom: 0vh;
-	transition: bottom 0.5s ease-in-out;
+	width: 100%;
+	overflow-y: hidden;
+	--bottom: 0;
 }
-
-.workspace {
+.placeholder {
+	width: 100%;
+	height: 100%;
+	background-color: var(--black);
+	position: relative;
+	bottom: var(--bottom);
+	transition: bottom 300ms ease-in-out;
+}
+.output {
 	position: relative;
 	box-shadow: inset 0 1px var(--grey), inset 0 -1px var(--grey);
 	width: 100%;
 	background-color: var(--dark);
 	display: grid;
-	grid-template-rows: 2.4em 1fr;
-	height: 100vh;
-}
-.workspace.sp {
-	grid-template-rows: 2.4em 3em 1fr;
+	grid-template-rows: 2.4rem 2.9rem 1fr;
+	grid-template-columns: 100%;
+	height: 100%;
+	overflow-x: hidden;
 }
 
 .menu {
@@ -555,36 +687,72 @@ input[type="checkbox"]:checked+.eyebox::after {
 	padding: 4px 0 4px 1em;
 	font-size: 0.9em;
 	background-color: var(--black);
+	gap: 0.5rem;
 }
-
 input[type="checkbox"] {
 	display: none;
 }
 .checkbox {
 	display: block;
 	cursor: pointer;
-	margin-right: 0.5em;
+	margin-right: 0.5rem;
 }
-.toggler {
+.menu > div {
 	height: 100%;
 	background-color: var(--dark-grey);
 	border-radius: 6px;
-	padding: 0 1em;
 	display: flex;
-	flex-direction: column;
 	justify-content: center;
-	font-weight: 700;
+	align-items: center;
+	font-weight: 900;
 	color: var(--light-grey);
 }
-.open::after {
-	content: "expand all";
+.show > input {
+	width: 5em;
+	height: 100%;
+	outline: none;
+	border: none;
+	margin: 0;
+	border-radius: 0 6px 6px 0;
+	background-color: var(--grey);
+	color: var(--light-grey);
+	font-weight: 600;
+	font-size: 0.9rem;
+	padding: 0 .5em;
 }
-input[type="checkbox"]:checked+.open {
-	background-color: var(--violet-darker);
-	color: var(--dark);
+.show > label {
+	padding: 0 0.5rem;
 }
-input[type="checkbox"]:checked+.open::after {
-	content: "close all";
+
+.menu .threemenu {
+	font-family: var(--icon);
+	padding-left: 0.5em;
+	font-weight: 100;
+	font-size: 1.2rem;
+}
+.threemenu > * {
+	font-size: 0.9rem;
+	font-weight: 900;
+	font-family: var(--sans);
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	box-shadow: 1px 0 0 0 var(--grey) inset;
+}
+.threemenu span {
+	padding: 0 .6em;
+}
+.threemenu > *:hover {
+	background-color: var(--light-grey);
+	color: var(--dark-grey);
+}
+.threemenu > *:first-child {
+	margin-left: 0.6rem;
+}
+.threemenu > *:last-child {
+	border-radius: 0 6px 6px 0;
 }
 .selectaction {
 	margin-right: 0.5em;
@@ -599,17 +767,18 @@ input[type="checkbox"]:checked+.open::after {
 	overflow-y: scroll;
 	color: var(--light);
 	position: relative;
-	padding-bottom: 4em;
-}
-label.regex {
 	display: flex;
-	flex-direction: row;
-	justify-content: left;
-	align-items: center;
-	padding: 0.5em 0.4em;
-	height: 2em;
+	flex-direction: column;
+	gap: 9px;
+	padding: 6px 8px 4em;
 }
-label.regex > input {
+.regex {
+	display: grid;
+	grid-template-columns: 4fr 2fr 5em 1fr;
+	padding: 0.4em;
+	height: 100%;
+}
+.regex input, .filehint > div {
 	font-family: var(--mono);
 	font-weight: 400;
 	border: none;
@@ -617,58 +786,86 @@ label.regex > input {
 	color: var(--light);
 	background: var(--dark-grey);
 	padding: 0 0.5em;
-	height: 100%;
-	margin-right: 0.5em;
 	border-radius: 4px;
 	outline: none !important;
 }
-label.regex > input:hover {
+.regex input:hover {
 	box-shadow: 0 0 0 2px var(--grey) inset;
 }
-label.regex > input:focus {
+.regex input:focus {
 	box-shadow: 0 0 0 2px var(--violet) inset;
 }
-label.regex > .expression {
-	width: 100%;
-	max-width: 30em;
+.regex > * {
+	min-width: 0;
+	margin-right: 0.5em;
+  height: 100%;
 }
-label.regex > .searchfile {
-  width: 8em;
+.filehint input {
+  width: 100%;
+  height: 100%;
 }
-label.regex > .button {
+.filehint > div {
+  display: none;
+  position: absolute;
+  margin-top: .3em;
+  z-index: 1;
+  border: 2px solid var(--violet);
+  box-shadow: 4px 4px 0 0 #0009;
+  max-width: 16em;
+  max-height: 12.5em;
+  scrollbar-width: none;
+  overflow-y: scroll;
+}
+.filehint > div::-webkit-scrollbar {
+	display: none;
+}
+.filehint > div > div {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.filehint > div > div:hover {
+  background-color: var(--grey);
+}
+.filehint > input:focus + div, .filehint > div:hover {
+  display: block;
+}
+.filehint > div:empty {
+  display: none !important;
+}
+
+.regex > .button {
 	display: inline-flex;
-	height: 1.7em;
+	border-radius: 4px;
 	padding: 0 1em;
 	margin: 0;
-	font-size: 1.1em;
+	font-size: 1.1rem;
 }
-
-
 
 /* dynamically added elements (result)  */
 
-.result > details {
+.problem {
 	display: block;
 	background-color: var(--dark);
-	margin: 0.8em calc(0.8em - 3px);
 	padding: 0;
 	border-radius: 12px;
 	border: 1px solid var(--grey);
 }
-:not(.sp) > .result > details.urgent {
-	border: 1px solid var(--green2);
-	box-shadow: 0px 0px 0px 1px var(--green2);
+details.urgent {
+	border: 1px solid var(--red);
+	box-shadow: 0px 0px 0px 1px var(--red);
 	background-color: var(--dark-grey);
 }
-:not(.sp) > .result > details.urgent:hover {
-	box-shadow: 0px 0px 0px 2px var(--green2);
+details.urgent:hover {
+	box-shadow: 0px 0px 0px 2px var(--red);
 }
-.result > details:hover {
+.problem:hover {
 	background-color: var(--black);
 	box-shadow: 0px 0px 0px 2px var(--grey);
 }
 
-.result > details > summary {
+.problem > summary {
 	overflow-x: hidden;
 	padding: 8px;
 	color: var(--white);
@@ -677,10 +874,10 @@ label.regex > .button {
 	align-items: center;
 }
 
-.result > details > summary::marker {
+.problem > summary::marker {
 	content: none;
 }
-.result > details > summary > label > .selector {
+.problem > summary > label > .selector {
 	width: 1.7rem;
 	height: 1.7rem;
 	border-radius: 8px;
@@ -700,14 +897,14 @@ label.regex > .button {
 	font-weight: 900;
 	-webkit-text-stroke: 2px var(--dark);
 }
-.result > details:hover > summary > label > .selector {
+.problem:hover > summary > label > .selector {
 	box-shadow: 0 0 0 1px var(--grey) inset, 0 0 0 4px var(--dark) inset;
 	background-color: var(--dark);
 }
-.result > details[open] > summary > label > .selector::after {
+.problem[open] > summary > label > .selector::after {
 	content: '\f063';
 }
-.result > details:hover > summary > label > .selector::after {
+.problem:hover > summary > label > .selector::after {
 	content: none;
 }
 input[type="checkbox"]:checked+.selector {
@@ -717,7 +914,7 @@ input[type="checkbox"]:checked+.selector {
 input[type="checkbox"]:checked+.selector::after {
 	content: none !important;
 }
-.result > details > summary > span > span {
+.problem > summary > span > span {
 	margin-left: 0.3em;
 	padding: 0 0.3em;
 	border-radius: 4px;
@@ -739,42 +936,37 @@ input[type="checkbox"]:checked+.selector::after {
 	color: var(--light-grey);
 }
 .copy {
-	display: none;
-	background-color: var(--foxy);
+	/*background-color: var(--foxy);*/
 	cursor: pointer;
+	position: absolute;
 }
 .copy > span {
 	font-family: var(--icon);
-	text-rendering: auto;
-}
-.copy > span::after {
-	content: "\f0c5";
 }
 .copy:hover > span {
 	display: none;
 }
-details:hover > summary > span > .copy {
-	display: inline;
-}
-.result > details > summary > span > .copy:hover {
-	padding: 0;
-}
-.copy > div.copymenu {
+.copymenu {
 	display: none;
 	border-radius: 4px;
-	font-size: 0.8em;
+	font-size: 0.8rem;
 	position: absolute;
-	line-height: 1.5em;
+	top: 0;
+	left: 0;
 }
-.copy:hover > div.copymenu {
-	display: inline-block;
-}
-
 .copymenu > div {
-	background-color: var(--foxy);
 	padding: 0.5em 1em;
 	position: relative;
-	bottom: 0.3em;
+	z-index: 2;
+	background-color: var(--black);
+}
+.copymenu > div:hover {
+	background-color: var(--light-grey);
+	color: var(--dark);
+}
+.copymenu > div:active {
+	color: var(--foxy);
+	background-color: var(--light);
 }
 .copymenu > div:first-child {
 	border-radius: 4px 4px 0 0;
@@ -782,14 +974,45 @@ details:hover > summary > span > .copy {
 .copymenu > div:last-child {
 	border-radius: 0 0 4px 4px;
 }
-.copymenu > div:hover {
-	background-color: var(--fox);
+.copy > .copymenu {
+	line-height: 1.5em;
 }
-.copymenu > div:active {
+.copy:hover > .copymenu {
+	display: inline-block;
+}
+.copy > .copymenu > div {
+	background-color: var(--foxy);
+	bottom: 0.3em;
+	box-shadow: 4px 4px 0 0 rgba(0,0,0,0.4);
+}
+.copy > .copymenu > div:hover {
+	background-color: var(--fox);
+	color: var(--white);
+}
+.copy > .copymenu > div:active {
 	color: var(--foxy);
 	background-color: var(--light);
 }
-
+.threemenu > div:hover > .copymenu {
+	display: inline-block;
+	border-radius: 0;
+	color: var(--light);
+	position: initial;
+	align-self: start;
+}
+.threemenu > div:hover > span {
+	display: none;
+}
+.threemenu .copymenu > div:first-child {
+	border-radius: 0;
+	box-shadow: none;
+}
+.threemenu > div:last-child > .copymenu > div:first-child {
+	border-radius: 0 6px 0 0;
+}
+.threemenu .copymenu > div {
+	box-shadow: 4px 4px 0 0 rgba(0,0,0,0.4);
+}
 .example {
 	display: flex;
 	flex-direction: column;
@@ -799,7 +1022,7 @@ details:hover > summary > span > .copy {
 	font-weight: 500;
 }
 
-.filename {
+.example > div {
 	padding: 0.3em 0.5em;
 	background-color: var(--grey);
 	color: var(--yellow);
@@ -819,6 +1042,8 @@ li {
 	font-size: 0.9em;
 	padding: 0.2em 0;
 	padding-inline-start: 1ch;
+	text-indent: -13rem;
+	padding-left: 13.5rem;
 }
 
 li::marker {
@@ -828,4 +1053,198 @@ li::marker {
 
 li:nth-child(even) {
 	color: var(--green4);
+}
+
+/* windows */
+window {
+	display: block;
+	resize: both;
+	width: 55em;
+	height: 30em;
+	position: absolute;
+	border-radius: 12px 12px 3px 12px;
+	overflow: hidden;
+	background-color: var(--dark);
+	top: 8px;
+	left: 8px;
+	box-sizing: content-box;
+	box-shadow: 0 0 0 1px var(--grey),
+		6px 6px 0 0 rgba(0,0,0,0.5),
+		0 0 0px 2px rgba(0,0,0,0.5);
+}
+.header {
+	padding: 0.2rem 1rem;
+	user-select: none;
+	cursor: move;
+	background-color: var(--dark);
+	border-radius: 12px 12px 0 0;
+	font-family: var(--mono);
+	color: var(--light-grey);
+	border-bottom: 1px solid var(--grey);
+	display: flex;
+	justify-content: space-between;
+}
+.deleteW {
+	color: var(--red);
+	border: 1px solid var(--red);
+	border-radius: 4px;
+	height: 1.4rem;
+	width: 1.4rem;
+	font-family: var(--icon);
+	font-weight: 900;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+}
+.deleteW:hover {
+	color: var(--dark);
+	background-color: var(--red);
+}
+.content {
+	height: 100%;
+	width: 100%;
+}
+.resize {
+	background-color: var(--black);
+	padding: 0.5em;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	cursor: se-resize;
+	z-index: 2;
+	font-family: var(--icon);
+	font-weight: 900;
+	border-radius: 8px 0 0 0;
+}
+
+/* start screen */
+article {
+	width: max-content;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	height: max-content;
+	margin: auto;
+	z-index: 0;
+	display: flex;
+	flex-direction: column;
+	padding-bottom: 4rem;
+}
+article h1 {
+	margin: 0;
+	font-size: 8em;
+}
+.title {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
+	margin-bottom: 2em;
+}
+article > div {
+	font-size: 1rem;
+	color: var(--light-grey);
+}
+.start {
+	--color: var(--green2);
+	--color2: var(--green4);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	margin: 0;
+	font-weight: 900;
+	color: var(--dark);
+	border-radius: 12px;
+	padding: .8rem 1rem 0rem;
+	background-color: var(--color);
+	cursor: pointer;
+	align-items: end
+}
+#start {
+	font-size: 5em;
+	font-family: var(--mono);
+}
+.start:hover {
+	background-color: var(--color2);
+}
+#icon {
+	font-family: var(--icon);
+	font-size: 2.5em;
+}
+#version {
+	width: max-content;
+	padding: 0 .5em;
+	color: var(--dark);
+	font-weight: 900;
+	background: linear-gradient(90deg, var(--foxy), var(--violet));
+	border-radius: 4px;
+	position: relative;
+	height: max-content;
+	top: 2.5rem;
+}
+#credits {
+	font-style: italic;
+	margin-bottom: .5em;
+}
+div.links {
+    display: flex;
+    flex-direction: column;
+	gap: 6px;
+	margin-left: 6px;
+}
+.buttonGrid {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	grid-template-rows: auto;
+}
+.links a {
+    display: grid;
+	grid-template-columns: 3rem 1fr;
+	grid-template-rows: 1fr;
+	background-color: var(--dark-grey);
+	height: 3rem;
+    position: relative;
+    font-size: 1rem;
+    color: var(--light-grey);
+    text-decoration: none;
+    font-style: normal;
+	border-radius: 12px;
+}
+.links a:hover {
+	background-color: var(--black);
+}
+.links span {
+	display: flex;
+	align-items: center;
+	padding-right: 2rem;
+}
+.links .icon {
+	justify-content: center;
+	padding: 0;
+}
+.links .icon::before {
+    content: var(--link-icon);
+    font-family: var(--icon);
+    font-weight: 900;
+	background-color: var(--grey);
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 2rem;
+	width: 2rem;
+}
+.docs-icon {
+    --link-icon: '\f02d';
+}
+.jar-icon {
+    --link-icon: '\f381';
+}
+.rules-icon {
+    --link-icon: '\f70e';
+}
+.dateformat-icon {
+    --link-icon: '\f073';
 }

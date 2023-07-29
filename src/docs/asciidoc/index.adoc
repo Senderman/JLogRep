@@ -1,0 +1,17 @@
+:icons: font
+
+= Documentation
+
+== Documentation main page
+
+=== icon:keyboard-o[] link:/docs/hotkeys.html[Hotkeys]
+
+=== icon:book[] link:/docs/usage.html[Usage guide]
+
+=== icon:filter[] link:/docs/writing-your-own-rules.html[Writing your own rules]
+
+=== icon:calendar[] link:/docs/writing-your-own-dateformat.html[Writing your own dateformat.yml]
+
+=== icon:gear[] link:/docs/configuration.html[Configuration]
+
+=== icon:cube[] link:/rapidoc[OpenAPI definition]

@@ -7,21 +7,22 @@ import java.io.InputStream;
 
 public class PlainTextLogsContainer implements LogsContainer {
 
-    private final LogSource inputStream;
+    private final LogSource logSource;
     private boolean isRequested;
 
-    public PlainTextLogsContainer(InputStream inputStream, String fileName) {
-        this.inputStream = new LogSource(inputStream, fileName);
+    public PlainTextLogsContainer(InputStream in, String fileName, long size) {
+        this.logSource = new LogSource(in, fileName, size);
         this.isRequested = false;
     }
 
     @Override
     @Nullable
-    public LogSource getNextEntry() {
+    public LogSource getNextFileEntry() {
         if (isRequested)
             return null;
 
         isRequested = true;
-        return inputStream;
+        return logSource;
     }
+
 }

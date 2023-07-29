@@ -1,26 +1,29 @@
 package com.senderman.jlogrep.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.stream.StreamSupport;
 
 public class YamlConfigMapper implements ConfigMapper {
 
-    private final ObjectMapper objectMapper;
-
-    public YamlConfigMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    @Override
+    public <T> T load(InputStream in, Class<T> type) {
+        return getYaml(type).load(in);
     }
 
     @Override
-    public <T> T map(InputStream in, Class<T> type) throws IOException {
-        return objectMapper.readValue(in, type);
+    public <T> List<T> loadAll(InputStream in, Class<T> type) {
+        return StreamSupport.stream(getYaml(type).loadAll(in).spliterator(), true)
+                .filter(type::isInstance)
+                .map(type::cast)
+                .toList();
     }
 
-    @Override
-    public <T> T map(InputStream in, TypeReference<T> type) throws IOException {
-        return objectMapper.readValue(in, type);
+    private Yaml getYaml(Class<?> type) {
+        return new Yaml(new Constructor(type, new LoaderOptions()));
     }
 }

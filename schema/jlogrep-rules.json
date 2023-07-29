@@ -2,7 +2,7 @@
   "$id": "https://github.com/Senderman/jlogrep/blob/master/schema/jlogrep-rules.json",
   "$schema": "https://github.com/Senderman/jlogrep/blob/master/schema/jlogrep-rules.json",
   "title": "Schema for rules.yml file",
-  "type": "array",
+  "type": "object",
   "definitions": {
     "pattern": {
       "type": "object",
@@ -25,55 +25,46 @@
       }
     }
   },
-  "items": {
-    "type": "object",
-    "required": [
-      "name",
-      "patterns",
-      "tags"
-    ],
-    "properties": {
-      "name": {
-        "description": "Name of the rule",
-        "type": "string"
-      },
-      "type": {
-        "description": "Type of the rule. Default is SIMPLE",
+  "required": [
+    "name",
+    "patterns",
+    "tag"
+  ],
+  "properties": {
+    "name": {
+      "description": "Name of the rule",
+      "type": "string"
+    },
+    "type": {
+      "description": "Type of the rule. Default is SIMPLE",
+      "type": "string",
+      "pattern": "SIMPLE|EXTRACT|MULTILINE"
+    },
+    "show": {
+      "description": "How many examples to show. Default is 5",
+      "type": "number"
+    },
+    "showAlways": {
+      "description": "Show always if the rule matched. False if omitted",
+      "type": "boolean"
+    },
+    "patterns": {
+      "description": "Patterns for the rule",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/pattern"
+      }
+    },
+    "tag": {
+      "description": "Tag of the rule",
+      "type": "string"
+    },
+    "filters": {
+      "description": "filters for this rule",
+      "type": "array",
+      "items": {
         "type": "string",
-        "pattern": "SIMPLE|EXTRACT|MULTILINE"
-      },
-      "show": {
-        "description": "How many examples to show. Default is 5",
-        "type": "number"
-      },
-      "showAlways": {
-        "description": "Show always if the rule matched. False if omitted",
-        "type": "boolean"
-      },
-      "patterns": {
-        "description": "Patterns for the rule",
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/pattern"
-        }
-      },
-      "tags": {
-        "description": "List of tags for the rule",
-        "type": "array",
-        "items": {
-          "type": [
-            "number",
-            "string"
-          ]
-        }
-      },
-      "filters": {
-        "description": "filters for this rule",
-        "type": "array",
-        "items": {
-          "type": "string",
-          "pattern": "UNIQUE"
-        }
+        "pattern": "UNIQUE"
       }
     }
   }

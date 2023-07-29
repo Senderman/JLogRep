@@ -1,0 +1,8 @@
+= Configuration
+
+You can configure the program using Java Standart Options (`-D` command line argument)
+
+Currently supported options:
+
+- `-DdisableBanner` disable startup banner.
+- `-DjsonLogs` print program's log as json using LogBack's JsonEncoder

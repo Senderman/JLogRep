@@ -1,106 +1,95 @@
 package com.senderman.jlogrep.model.internal;
 
-import com.senderman.jlogrep.model.rules.FileRule;
-import com.senderman.jlogrep.model.rules.LogDateFormat;
-import com.senderman.jlogrep.model.rules.RuleFilter;
-import com.senderman.jlogrep.model.rules.YamlRule;
-import com.senderman.jlogrep.util.RuleConverter;
+import com.senderman.jlogrep.model.rule.ConfigRule;
+import com.senderman.jlogrep.model.rule.GrepRule;
+import com.senderman.jlogrep.model.rule.LogDateFormat;
+import com.senderman.jlogrep.model.rule.RuleFilter;
+import com.senderman.jlogrep.util.ConfigConverter;
 import io.micronaut.core.annotation.Nullable;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 public class ScanOptions {
 
-    private List<FileRule> fileRules;
+    private List<GrepRule> rules;
     private LogDateFormat dateFormat;
     @Nullable
-    private Date problemDate;
+    private Instant problemDate;
     private int interval;
     private int year;
-    @Nullable
-    private Integer show;
     private Set<String> tags;
     private EnumSet<RuleFilter> filters;
 
     public ScanOptions(
-            List<FileRule> fileRules,
+            List<GrepRule> rules,
             LogDateFormat dateFormat,
-            @Nullable Date problemDate,
+            @Nullable Instant problemDate,
             int interval,
             int year,
-            @Nullable Integer show,
             Set<String> tags,
             EnumSet<RuleFilter> filters
     ) {
-        this.fileRules = fileRules;
+        this.rules = rules;
         this.dateFormat = dateFormat;
         this.problemDate = problemDate;
         this.interval = interval;
         this.year = year;
-        this.show = show;
         this.tags = tags;
         this.filters = filters;
     }
 
-    public List<FileRule> getFileRules() {
-        return fileRules;
+    public List<GrepRule> getRules() {
+        return rules;
     }
 
-    public void setYamlRules(List<YamlRule> yamlRules) {
-        setFileRules(RuleConverter.toFileRules(yamlRules));
+    public ScanOptions setRules(List<GrepRule> rules) {
+        this.rules = rules;
+        return this;
     }
 
-    public void setFileRules(List<FileRule> fileRules) {
-        this.fileRules = fileRules;
+    public ScanOptions setConfigRules(List<ConfigRule> configRules) {
+        setRules(ConfigConverter.toGrepRules(configRules));
+        return this;
     }
 
     public LogDateFormat getDateFormat() {
         return dateFormat;
     }
 
-    public void setDateFormat(LogDateFormat dateFormat) {
+    public ScanOptions setDateFormat(LogDateFormat dateFormat) {
         this.dateFormat = dateFormat;
+        return this;
     }
 
-    @Nullable
-    public Date getProblemDate() {
-        return problemDate;
-    }
-
-    public void setProblemDate(@Nullable Date problemDate) {
+    public ScanOptions setProblemDate(@Nullable Instant problemDate) {
         this.problemDate = problemDate;
+        return this;
     }
 
-    public int getInterval() {
-        return interval;
-    }
-
-    public void setInterval(int interval) {
+    public ScanOptions setInterval(int interval) {
         this.interval = interval;
+        return this;
+    }
+
+    public TimeInterval getTimeInterval() {
+        return new TimeInterval(problemDate, interval);
     }
 
     public int getYear() {
         return year;
     }
 
-    public void setYear(int year) {
+    public ScanOptions setYear(int year) {
         this.year = year;
+        return this;
     }
 
-    @Nullable
-    public Integer getShow() {
-        return show;
-    }
-
-    public void setShow(@Nullable Integer show) {
-        this.show = show;
-    }
-
-    public void setTags(Set<String> tags) {
+    public ScanOptions setTags(Set<String> tags) {
         this.tags = tags;
+        return this;
     }
 
     public Set<String> getTags() {
@@ -111,7 +100,8 @@ public class ScanOptions {
         return filters;
     }
 
-    public void setFilters(EnumSet<RuleFilter> filters) {
+    public ScanOptions setFilters(EnumSet<RuleFilter> filters) {
         this.filters = filters;
+        return this;
     }
 }

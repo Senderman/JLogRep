@@ -1,0 +1,29 @@
+:toc: left
+:experimental:
+:icons: font
+
+= Hotkeys
+
+== Windows/Linux
+
+- kbd:[Enter] - start analysis
+- kbd:[Ctrl+Enter] - open file picker to **upload logs**
+- kbd:[Ctrl+E] - toggle all tags icon:eye[]
+- kbd:[Ctrl+O] - expand/close all problems icon:folder[]
+- kbd:[Ctrl+Up] - Maximize workspace icon:window-maximize[]
+- kbd:[Ctrl+Down] - Minimize workspace icon:window-restore[]
+- kbd:[Ctrl+Left] - Hide options panel
+- kbd:[Ctrl+Right] - Show options panel
+- kbd:[Ctrl+G] - arrange workspaces inside grid
+
+== MacOS
+
+- kbd:[Enter] - start analysis
+- kbd:[Ctrl+Enter] - open file picker to **upload logs**
+- kbd:[Ctrl+E] - toggle all tags icon:eye[]
+- kbd:[Ctrl+O] - expand/close all problems icon:folder[]
+- kbd:[Shift+Up] - Maximize workspace icon:window-maximize[]
+- kbd:[Shift+Down] - Minimize workspace icon:window-restore[]
+- kbd:[Shift+Left] - Hide options panel
+- kbd:[Shift+Right] - Show options panel
+- kbd:[Ctrl+G] - arrange workspaces inside grid

@@ -1,0 +1,61 @@
+:toc: left
+
+= Writing your own dateformat.yml
+
+dateformat.yml is used to tell the program how to parse dates from different log files with different date format.
+To create your own dateformat.yml, you should create a .yml file and fill it in
+
+== Syntax
+
+First, there's `defaultRule` block, that matches any file not listed in the `rules` block.
+
+Second, there's `rules` block, where you specify per-file rules for the date format.
+
+=== Example
+
+[source,yaml]
+----
+defaultRule: # default (fallback) date format
+  file: anyname # ignored, but required
+  format: 'yyyy-MM-dd HH:mm:ss.SSS'
+  regex: '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}:\d{3}'
+
+rules:
+  - file: dmesg
+    format: >-
+      '['EEE MMM [ ]d HH:mm:ss yyyy']'
+    regex: '\[\p{L}{3} \p{L}{3}\s+\d{1,2} \d{2}:\d{2}:\d{2} \d{4}\]'
+
+  - file: logcat
+    format: 'yyyy-MM-dd HH:mm:ss.SSS'
+    possibleMissingYear: true
+    yearSuffix: "-"
+----
+
+=== Explanation
+
+[cols="1,1,1"]
+|===
+|Name|Description|Default value
+
+|file
+|Part of the filename that will match this format. E.g. if you put `logcat` here, it will match any file with word `logcat` in its name. Required, but ignored inside the `defaultRule` block.
+|
+
+|format
+|Format of the date. This refers to Java 17 DateTimeFormatter.
+See https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html[official Java documentation]
+|
+
+|regex
+|Regex used to extract date from file. E.g. if your format is `yyyy-MM-dd HH:mm:ss.SSS`, then to extract the date, you have to use the following regex: `\d\{4}-\d\{2}-\d\{2} \d\{2}:\d\{2}:\d\{2}:\d\{3}`
+|
+
+|possibleMissingYear
+|Set to true if the year **could** be (but not definitely be) missing in your log file. You can supply it via `year` parameter when uploading your logs.
+|false
+
+|yearSuffix
+|String that you expect to see after the year. For example, if you set "-" here, your regex should start with '\d\{4}-'. This field is ignored if `possibleMissingYear`=`false`
+|
+|===

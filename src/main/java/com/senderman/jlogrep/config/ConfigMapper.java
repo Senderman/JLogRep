@@ -1,33 +1,31 @@
 package com.senderman.jlogrep.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.senderman.jlogrep.exception.InvalidConfigFormatException;
-import com.senderman.jlogrep.model.rules.LogDateFormat;
-import com.senderman.jlogrep.model.rules.YamlRule;
+import com.senderman.jlogrep.model.rule.ConfigDateFormat;
+import com.senderman.jlogrep.model.rule.ConfigRule;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 public interface ConfigMapper {
-    <T> T map(InputStream in, Class<T> type) throws IOException;
 
-    <T> T map(InputStream in, TypeReference<T> type) throws IOException;
+    <T> T load(InputStream in, Class<T> type);
 
-    default List<YamlRule> mapRules(InputStream in) throws InvalidConfigFormatException {
+    <T> List<T> loadAll(InputStream in, Class<T> type);
+
+    default List<ConfigRule> mapRules(InputStream in) throws InvalidConfigFormatException {
         try {
-            return map(in, new TypeReference<>() {
-            });
-        } catch (IOException e) {
-            throw new InvalidConfigFormatException("rules.yml");
+            return loadAll(in, ConfigRule.class);
+        } catch (Exception e) {
+            throw new InvalidConfigFormatException("rules.yml", e);
         }
     }
 
-    default LogDateFormat mapLogDateFormat(InputStream in) throws InvalidConfigFormatException {
+    default ConfigDateFormat mapLogDateFormat(InputStream in) throws InvalidConfigFormatException {
         try {
-            return map(in, LogDateFormat.class);
-        } catch (IOException e) {
-            throw new InvalidConfigFormatException("dateformat.yml");
+            return load(in, ConfigDateFormat.class);
+        } catch (Exception e) {
+            throw new InvalidConfigFormatException("dateformat.yml", e);
         }
     }
 

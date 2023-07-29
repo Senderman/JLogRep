@@ -1,0 +1,21 @@
+asciidoctorj {
+    version '2.5.7'
+
+    options doctype: "book", ruby: "erubis"
+
+    attributes "source-highlighter": "coderay",
+            "toclevels": "5",
+            "nofooter": "",
+            "reproducible": "",
+            "setanchors": "",
+            "listing-caption": "",
+            "stylesheet": "/docs/css/asciidoc-dark.css",
+            "styledir": "/css",
+            "!iconfont-remote": "",
+            "iconfont-name": "/docs/css/font-awesome.min",
+            "linkcss": "",
+            "favicon": "/favicon.ico",
+            "imagesdir": "images",
+            "project-version": "$project.version",
+            "revnumber": "$project.version"
+}

@@ -1,86 +1,64 @@
 package com.senderman.jlogrep.model.request;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.senderman.jlogrep.model.rules.RuleFilter;
+import com.senderman.jlogrep.model.rule.RuleFilter;
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.convert.format.Format;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Schema
 public abstract class AbsAnalysisRequest {
 
-    private final static DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm";
+    private static final DateTimeFormatter df = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.ENGLISH);
+    private static final ZoneOffset zoneOffset = ZoneOffset.UTC;
 
     @Nullable
-    Date date;
+    private final Instant date;
+    private final int year;
+    private final int interval;
+    private final EnumSet<RuleFilter> filters;
 
-    int year = Calendar.getInstance().get(Calendar.YEAR);
+    public AbsAnalysisRequest(
+            @Format(DATE_FORMAT) @Nullable String date,
+            @Nullable Integer year,
+            @Nullable Integer interval,
+            @Nullable String filters
+    ) {
 
-    private int interval = 10;
+        this.date = date == null ? null : LocalDateTime.parse(date, df).toInstant(zoneOffset);
+        this.year = Objects.requireNonNullElseGet(year, () -> LocalDate.now(ZoneId.of("UTC+0")).getYear());
+        this.interval = Objects.requireNonNullElse(interval, 10);
 
-    @Nullable
-    private Integer show;
-
-    @Nullable
-    private EnumSet<RuleFilter> filters = EnumSet.noneOf(RuleFilter.class);
-
-    @Nullable
-    @JsonGetter
-    public Date getDate() {
-        return date;
+        if (filters == null)
+            this.filters = EnumSet.noneOf(RuleFilter.class);
+        else
+            this.filters = EnumSet.copyOf(Stream.of(filters.split(","))
+                    .map(RuleFilter::valueOf)
+                    .collect(Collectors.toSet()));
     }
 
-    @JsonSetter
-    public void setDate(@Nullable String date) throws ParseException {
-        if (date == null)
-            return;
-        this.date = df.parse(date);
+    public @Nullable Instant getDate() {
+        return date;
     }
 
     public int getYear() {
         return year;
     }
 
-    public void setYear(int year) {
-        this.year = year;
-    }
-
     public int getInterval() {
         return interval;
     }
 
-    public void setInterval(int interval) {
-        this.interval = interval;
-    }
-
-    @Nullable
-    public Integer getShow() {
-        return show;
-    }
-
-    public void setShow(@Nullable Integer show) {
-        this.show = show;
-    }
-
-    @Nullable
     public EnumSet<RuleFilter> getFilters() {
         return filters;
-    }
-
-    public void setFilters(@Nullable String filters) {
-        if (filters == null)
-            return;
-
-        this.filters = EnumSet.copyOf(Stream.of(filters.split(","))
-                .map(RuleFilter::valueOf)
-                .collect(Collectors.toSet()));
     }
 
 }

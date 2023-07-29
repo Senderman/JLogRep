@@ -1,0 +1,178 @@
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+
+@import url(/docs/css/asciidoctor-default.css); /* Default asciidoc style framework - important */
+
+/* JETBRAINS */
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  src: url(/style/JetBrainsMono.ttf);
+}
+
+/* IBM PLEX */
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100;
+  src: url(/style/IBMPlexSans-Thin.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 200;
+  src: url(/style/IBMPlexSans-ExtraLight.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 300;
+  src: url(/style/IBMPlexSans-Light.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(/style/IBMPlexSans-Regular.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  src: url(/style/IBMPlexSans-Medium.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: url(/style/IBMPlexSans-SemiBold.ttf);
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: url(/style/IBMPlexSans-Bold.ttf);
+}
+
+/* CUSTOMISATIONS */
+/* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
+:root{
+--maincolor:#232323;
+--primarycolor:#663973;
+--secondarycolor:#9453A6;
+--tertiarycolor:#4db6ac;
+--sidebarbackground:#2f2f2f;
+--linkcolor:#7fa646;
+--linkcoloralternate:#aaa;
+--white:#eee;
+--mono: 'JetBrains Mono', Courier New, Courier, monospace;
+}
+
+/* Text styles */
+
+body{font-family: "IBM Plex Sans",sans-serif;background-color: var(--maincolor);color:var(--white);}
+
+h1{color:var(--primarycolor) !important;font-family:"IBM Plex Sans",sans-serif;font-weight: 700;}
+h2,h3,h4,h5,h6{color:var(--secondarycolor) !important;font-family:"IBM Plex Sans",sans-serif;font-weight: 700;}
+.title{color:var(--white) !important;font-family:"Noto Sans",sans-serif;font-style: normal; font-weight: normal;}
+p{font-family: "IBM Plex Sans",sans-serif ! important}
+#toc.toc2 a:link{color:var(--linkcolor);}
+blockquote{color:var(--tertiarycolor) !important}
+.quoteblock{color:var(--white)}
+code{font-family:var(--mono);color:var(--linkcoloralternate);background-color: var(--sidebarbackground) !important}
+
+
+/* Table styles */
+th{background-color: var(--maincolor);color:var(--white) !important;}
+td{background-color: var(--maincolor);color: var(--linkcoloralternate) !important}
+
+
+#toc.toc2{background-color:var(--sidebarbackground);}
+#toctitle{color:var(--white);}
+
+/* Responsiveness fixes */
+video {
+  max-width: 100%;
+}
+
+@media all and (max-width: 600px) {
+  table {
+    width: 55vw!important;
+    font-size: 3vw;
+  }
+}
+
+.exampleblock > .content {
+  background-color: var(--maincolor);
+}
+
+a {
+  color: var(--secondarycolor);
+}
+
+.admonitionblock td.icon .icon-tip::before {
+  text-shadow: none;
+  color: var(--white);
+}
+.admonitionblock td.icon .icon-note::before {
+  color: var(--tertiarycolor);
+}
+.admonitionblock td.icon .icon-important::before {
+  color: var(--linkcolor);
+}
+/*.admonitionblock td.icon .icon-caution::before {
+  color: var(--linkcoloralternate);
+}*/
+.admonitionblock td.icon .icon-warning::before {
+  color: var(--primarycolor);
+}
+
+#preamble > .sectionbody > .paragraph:first-of-type p {
+  color: var(--white);
+}
+
+.quoteblock blockquote::before {
+  color: var(--primarycolor);
+}
+.quoteblock .attribution cite, .verseblock .attribution cite {
+  color: var(--white);
+}
+.verseblock pre {
+  color: var(--white);
+}
+.quoteblock blockquote, .quoteblock blockquote p {
+  color: var(--white);
+}
+
+.sidebarblock {
+  background: var(--sidebarbackground);
+}
+.literalblock pre, .listingblock pre:not(.highlight), .listingblock pre[class="highlight"], .listingblock pre[class^="highlight "], .listingblock pre.CodeRay, .listingblock pre.prettyprint {
+  background: var(--sidebarbackground);
+  color: var(--white);
+}
+
+.CodeRay > code > .key {
+  color:var(--linkcolor);
+}
+
+.CodeRay > code > .string > .content {
+  color: var(--secondarycolor);
+}
+.CodeRay > code > .string > .delimiter {
+  color: var(--linkcoloralternate);
+}
+
+#header .details {
+  color: var(--white);
+}
+#header .details span.email a {
+  color: var(--linkcoloralternate);
+}
+#toc.toc2 {
+  border-right: 2px solid #1a1a1a;
+}
+.sect1 + .sect1 {
+  border-top: 2px solid #444;
+}
